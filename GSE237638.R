@@ -24,7 +24,7 @@ Idents(LMS) <- "clusters_res0.5"
 ## LMS[["RNA"]] <- JoinLayers(LMS[["RNA"]]) ##h合并layers（数据整理）
 
 cell_markers <- list(
-  #间充质细胞
+  
   MSC =c("CD34","PDGFRA"),
   #免疫细胞
   immunocell= c("PTPRC"),
@@ -509,6 +509,7 @@ TC <- as.matrix(GetAssayData(LMS,layer = 'data'))[,WhichCells(LMS,idents= c("met
 data <- LayerData(LMS, assay = "RNA", layer = "counts",idents= c("metastatic Tumorcell","Malignant cell"))
 data <- as(data, "sparseMatrix")          #稀疏矩阵 
 data <- as.data.frame(data)
+
 
 
 
