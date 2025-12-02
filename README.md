@@ -19,16 +19,23 @@ In this part, I will process quality control for my scRNA-seq data.
 ## 2. Data integration and FindCluster
 在这一部分，我将对质控完成的数据进行多样本整合，并进行聚类
 ### 04.Harmony
-### 05.Annotation
+质控后的单细胞数据整合后进行通过*sc_harmony.R*去除批次效应
+### 05.Finder Best Resolution
 
-## 3. Cell Annotation
+## 3. Cell Annotation & Subtype Annotation
+在这一部分将对最适Resolution的各个cluster进行细胞注释相关操作
+### 06. Major CellAnnotation
+通过各谱系marker进行注释
+### 07. Subtype Annotation
+* T/NK cell
+* Monoctye
+* Fibroblast 
 
-## 4. Subtype Annotation
+## 4. Infercnv Analysis
 
-## 5. Infercnv Analysis
+## 5. Cellchat Analysis
 
-## 6. Cellchat Analysis
-
-## 7. Cytotrace and Monocle Analysis
-
-## 8. 
+## 6. Cytotrace and Monocle Analysis
+### CytoTRCAE2 
+### Monocle2 & Monocle3
+### slingplot
