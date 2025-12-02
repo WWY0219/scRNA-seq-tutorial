@@ -1,2 +1,5 @@
 # scRNA-seq-tutorial
-The relevant codes used by WWY for analyzing scRNA-seq. Please be careful!!!
+The relevant codes used by WWY for analyzing **scRNA-seq**. Please be careful!!!
+## Cellranger
+In this field, I don not know about this app.
+## Quality Control
