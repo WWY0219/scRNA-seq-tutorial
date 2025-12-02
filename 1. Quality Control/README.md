@@ -17,7 +17,7 @@ First, we need to clarify the file storage structure.
 -----../...<br>
 
 ### 01.Run sc_run.q
-Perform separate QC for each individual sample, including the removal of Mit-related genes, RBC-related genes, and ribo-related genes. Name the sample (e.g., *Seurat_obj_1*) and name the output file *seurat_obj_1_qc*.<br>
+Perform separate QC for each individual sample, including the removal of Mit-related genes, RBC-related genes, and ribo-related genes. Name the sample (e.g., `*Seurat_obj_1*`) and name the output file *seurat_obj_1_qc*.<br>
 Perform QC and filtering based on the corresponding expression profile of each sample, and name the resulting object *seurat_obj_1_filtered*.<br>
 
 ### 02.Run sc_doublefinder.R
