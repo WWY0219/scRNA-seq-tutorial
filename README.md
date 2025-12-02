@@ -7,10 +7,20 @@ In this field, I don not know about this app.
 In this part, I will process quality control for my scRNA-seq data. 
 首先我们需要明确文件存放结构
 >./01.QC/
->>../01.Rawdata
->>../02.Code
->>../03.Output
->>>../Seurat_obj/
+>├── data/                 # 原始数据/预处理数据目录
+│   ├── raw/              # 原始测序数据（如fastq、count矩阵）
+│   └── processed/        # 清洗/归一化后的数据（如RDS、h5ad）
+├── scripts/              # 分析脚本目录
+│   ├── 01_preprocess.R   # 数据预处理脚本
+│   ├── 02_cluster.R      # 细胞聚类脚本
+│   └── 03_trajectory.R   # 轨迹分析脚本
+├── results/              # 结果输出目录
+│   ├── figures/          # 可视化图表（PDF/PNG）
+│   ├── tables/           # 统计表格（CSV/Excel）
+│   └── rds/              # 保存的Seurat/Monocle对象
+├── docs/                 # 文档目录（如实验方案、说明文档）
+├── README.md             # 项目说明文档
+└── .gitignore            # Git忽略文件配置
 ### 01.Run sc_run.q
 对单样本进行单独质控，包括去除线粒体相关基因、红细胞相关基因和核糖体相关基因。样本命名应为不添加"_"的字符(*eg.Seuratobj*)，输出文件后应更名为*seuratobj_qc*.<br>
 根据每个样本的相应表达进行质控并筛选细胞<br>
