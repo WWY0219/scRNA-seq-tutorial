@@ -59,18 +59,18 @@ sc_qc <- function(seurat_obj = NULL,
     # Get name of Seurat object
     obj_name <- deparse(substitute(seurat_obj))
     
-    ---------------------------------------- 00. Pre-Check ---------------------------------------------------------
+    # ---------------------------------------- 00. Pre-Check ---------------------------------------------------------
     if (is.null(seurat_obj)) stop("Please provide a Seurat object (seurat_obj)!")
     if (is.null(out_dir)) stop("Please specify the output directory (out_dir)!")
     
-    ---------------------------------------- 01. Create Output Directory -------------------------------------------
+    # ---------------------------------------- 01. Create Output Directory -------------------------------------------
     output_dir <- file.path(out_dir, obj_name)
     if (!dir.exists(output_dir)) {
         dir.create(output_dir, recursive = TRUE)
         message(paste("Output directory automatically created:", output_dir))
     }
         
-    ---------------------------------------- 02. Quality Control: Remove Low-Quality Cells ------------------------
+    # ---------------------------------------- 02. Quality Control: Remove Low-Quality Cells ------------------------
     # Calculate mitochondrial gene percentage
     seurat_obj[["percent.mt"]] <- Seurat::PercentageFeatureSet(seurat_obj, pattern = "^MT-")
 
@@ -82,7 +82,7 @@ sc_qc <- function(seurat_obj = NULL,
     # Calculate hemoglobin (RBC) gene percentage
     seurat_obj[["percent_RBC"]] <- PercentageFeatureSet(seurat_obj, pattern = "^HB[AB]")
   
-    ---------------------------------------- 03. Generate QC Plots ------------------------------------------------
+    # ---------------------------------------- 03. Generate QC Plots ------------------------------------------------
     # RNA count vs. feature count scatter plot
     plot1 <- Seurat::FeatureScatter(seurat_obj, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
     ggsave(filename = file.path(output_dir, paste0(obj_name, "_qc_nRNA.pdf")), 
@@ -119,11 +119,10 @@ sc_qc <- function(seurat_obj = NULL,
            plot = qc_meta_violin, width = width, height = height, dpi = dpi)
     message("QC plot saved as: ", paste0(obj_name, "_qc_metaviolin.pdf"))
 
-    ---------------------------------------- 04. Metadata Preview -----------------------------------------------
+    # ---------------------------------------- 04. Metadata Preview -----------------------------------------------
     cat("\n=== First 5 rows of metadata (including ribosomal/mitochondrial percentages) ===\n")
     print(head(seurat_obj@meta.data, 5))
     
-    ---------------------------------------- 05. Return Updated Seurat Object -----------------------------------
+    # ---------------------------------------- 05. Return Updated Seurat Object -----------------------------------
     return(seurat_obj)
-  }
 }
