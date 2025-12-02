@@ -37,9 +37,9 @@ seurat_obj_2 <- CreateSeuratObject(counts = seurat_obj_2, project = "seurat_obj_
 ncol(seurat_obj_1)
 ncol(seurat_obj_2)
 
-#==================================Run sc_run.R==================================
-seurat_obj_1_qc <- sc_qc(seurat_obj = seurat_obj_1)
-seurat_obj_2_qc <- sc_qc(seurat_obj = seurat_obj_2)
+#==================================Run sc_qc.R==================================
+seurat_obj_1_qc <- sc_qc(seurat_obj = seurat_obj_1, out_dir = "../03.Output/")
+seurat_obj_2_qc <- sc_qc(seurat_obj = seurat_obj_2, out_dir = "../03.Output/")
 
 ##Process QC based on above result
 ###Eg.seurat_obj_1
@@ -55,8 +55,8 @@ p_seurat_obj_1_filtered <- VlnPlot(seurat_obj_1_filtered,
 p_seurat_obj_1_filtered
 ggsave("../03.Output/seurat_obj_1/seurat_obj_1_qc_mt_violin_filtered.pdf", plot = p_seurat_obj_1_filtered, width = 10, height = 8, dpi = 300)   #Head QC effect
 
-#==================================Run sc_run.R==================================
-seurat_obj_1_db <- sc_doublefinder(seurat_obj= seurat_obj_1_filtered ,max.dim = 40 , max.pcs=40, pN = 0.25)
+#==================================Run sc_doublefinder.R==================================
+seurat_obj_1_db <- sc_doublefinder(seurat_obj= seurat_obj_1_filtered ,max.dim = 40 , max.pcs=40, pN = 0.25, out_dir = "../03.Output/")
 
 
 #==================================Merge singledata==============================
