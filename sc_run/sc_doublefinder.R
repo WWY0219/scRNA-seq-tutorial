@@ -69,7 +69,7 @@ sc_doublefinder <- function(seurat_obj= NULL,
 
     ###-------------------------------- 2. Normalization -> FindVariableFeatures -> ScaleData -> PCA ----------------------###
     message("Starting Normalization -> FindVariableFeatures -> ScaleData -> PCA...")
-    seurat_obj <- NormalizeData(seurat_obj, normalization.method = "LogNormalize", scale.factor = 10000)
+    seurat_obj <- NormalizeData(seurat_obj, normalization.method = "LogNormalize", scale.factor = median(seurat_obj@meta.data$nCount_RNA))
     seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 2000) 
     seurat_obj <- ScaleData(seurat_obj)
     seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
