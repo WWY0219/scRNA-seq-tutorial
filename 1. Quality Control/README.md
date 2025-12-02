@@ -6,11 +6,15 @@ In this part, I will process quality control for my scRNA-seq data.
 首先我们需要明确文件存放结构
 >./01.QC/<br>
 --01.Rawdata<br>
+-----Seurat_obj_1.h5<br>
+-----Seurat_obj_2.h5<br>
+-----...<br>
 --02.Code<br>
+-----QC.R<br>
 --03.Output<br>
------Seurat_obj_1<br>
------Seurat_obj_1<br>
------...
+-----../Seurat_obj_1/<br>
+-----../Seurat_obj_1<br>
+-----../...<br>
 
 ### 01.Run sc_run.q
 对单样本进行单独质控，包括去除线粒体相关基因、红细胞相关基因和核糖体相关基因。样本命名应为不添加"_"的字符(*eg.Seuratobj*)，输出文件后应更名为*seuratobj_qc*.<br>
