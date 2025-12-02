@@ -24,7 +24,7 @@ Perform QC and filtering based on the corresponding expression profile of each s
 Remove doublets from individual samples (inferior - quality doublets are eliminated using <mark>***Doublefinder***</mark>), and name the output file *`seurat_obj_1_db`*.
 
 ### 03.Run sc_decontx.R
-使用<mark>***Decontx***<mark>去除环境RNA污染（可选）<br>
+使用<mark>***Decontx***</mark>去除环境RNA污染（可选）<br>
 
 ### Merge Files
 Save *`seurat_obj_merge`* as *`seurat_obj_merge_qc`* with format of .qs or .rds. <br>
