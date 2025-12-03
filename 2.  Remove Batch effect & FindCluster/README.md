@@ -14,7 +14,7 @@ First, we need to clarify the file storage structure.
 --03.Output<br>
 -----../Seurat_obj_resolution_res1/<br>
 -----../Seurat_obj_resolution_res2/<br>
------../Seurat_obj<br>
+-----../Seurat_obj_<br>
 
 ### 01.Run Harmony
 Perform separate QC for each individual sample, including the removal of Mit-related genes, RBC-related genes, and ribo-related genes. Name the sample (e.g., *`Seurat_obj_1`*) and name the output file *`seurat_obj_1_qc`*.<br>
