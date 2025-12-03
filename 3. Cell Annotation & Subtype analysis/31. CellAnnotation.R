@@ -18,43 +18,34 @@ set.seed(1234)
 # =================================== Load scData with celltype_major  ===================================================
 surat_obj <- readRDS("../03.Output/seurat_obj_harmony/seurat_obj_harmony.rds")
 Idents(seurat_obj) <- "clusters_res0.5"
-## subset subtype
-T_NK <- subset(seurat_obj,subset=celltype_major=="T/NK")
-qsave(T_NK, file = "T_NK.qs")
-Monocyte <- subset(seurat_obj,subset = celltype_major=="Monocyte")
-qsave(Monocyte, file = "Monocyte.qs")
+##绘制样本和cluster的umap图
+
 
 # ===============================================Cellmarkers Figures===============================================
-dir.create("../03.Output/cellmarkers_fig/")
+dir.create("../03.Output/Major-CellAnnotation/")
 
 ## AllcellMarkers-1
-cell_markers <- list(
-  #间充质细胞
-  MSC =c("CD34","PDGFRA"),
-  #免疫细胞
-  immunocell= c("PTPRC"),
-  T_cell = c("CD3E", "CD3D", "CD4", "CD8A"),
-  B_cell = c("MS4A1", "CD19", "CD79A"),
-  Monocyte_Macrophage = c("CD14", "CD68", "CSF1R", "FCGR3A", "LYZ","ITGAM"),
-  Dendritic_cell = c("CD1C", "CLEC9A", "HLA-DRA", "CD83"),
-  NK_cell = c("NKG7", "GNLY", "KLRD1", "NCAM1"),  # NCAM1即CD56
-  Mast_cell = c("CPA3", "TPSAB1", "KIT"),
-  # 基质细胞
-  Fibroblast = c("COL1A1", "COL3A1", "THY1", "DCN", "FAP"),  # THY1即CD90
-  Endothelial_cell = c("PECAM1", "VWF", "CDH5", "CLDN5", "FLT1"),  # PECAM1即CD31
-  Smooth_muscle_cell = c("ACTA2", "MYH11", "TAGLN"),
-  SMC_cancercell =c("ACTG2","PRLR","SFRP4"),
-  ESC =c("PLN","RGS5","SUSD2"),
-  #增值细胞 
-  Proliferating_cell = c("MKI67", "PCNA", "TOP2A", "CCNB1"),
-  # 其他常见细胞
-  Epithelial_cell = c("EPCAM", "KRT8", "KRT18", "CDH1")
-)
+cell_markers <- list(MSC =c("CD34","PDGFRA"),                                 #间充质细胞
+                     immunocell= c("PTPRC"),                                  
+                     T_cell = c("CD3E", "CD3D", "CD4", "CD8A"),
+                     B_cell = c("MS4A1", "CD19", "CD79A"),
+                     Monocyte = c("CD14", "CD68", "CSF1R", "FCGR3A", "LYZ","ITGAM"),
+                     Dcs = c("CD1C", "CLEC9A", "HLA-DRA", "CD83"),
+                     NK = c("NKG7", "GNLY", "KLRD1", "NCAM1"),                      # NCAM1即CD56
+                     Mastcell = c("CPA3", "TPSAB1", "KIT"),
+                     Fibroblast = c("COL1A1", "COL3A1", "THY1", "DCN", "FAP"),      # THY1即CD90
+                     Endothelial = c("PECAM1", "VWF", "CDH5", "CLDN5", "FLT1"),     # PECAM1即CD31
+                     SMC = c("ACTA2", "MYH11", "TAGLN"),                            # 基质细胞
+                     SMC_cancercell =c("ACTG2","PRLR","SFRP4"),
+                     ESC =c("PLN","RGS5","SUSD2"),
+                     Proliferating_cell = c("MKI67", "PCNA", "TOP2A", "CCNB1"),
+                     Epithelial = c("EPCAM", "KRT8", "KRT18", "CDH1")
+                    )
 
-p1 <- DotPlot(object = seurat_obj,
-              features = cell_markers,  
-              cols = c("grey", "red"),
-              luster.idents = TRUE) +
+p_cellmarkers <- DotPlot(object = seurat_obj,
+                         features = cell_markers,  
+                         cols = c("grey", "red"),
+                         cluster.idents = TRUE) +
 RotatedAxis() +
 theme( panel.border = element_rect(color = "black", fill = NA),  
        panel.spacing = unit(1, "mm"),
@@ -64,9 +55,9 @@ theme( panel.border = element_rect(color = "black", fill = NA),
      ) +
 labs(x = "", y = "")
 print(p1)
-ggsave("../03.Output/usoooo_cellmarker_0.5.pdf", plot = p, width = 20, height = 12, dpi = 300)
+ggsave("../03.Output/Major-CellAnnotation/seurat_obj_cellmarkers.pdf", plot = p_cellmarkers, width = 20, height = 12, dpi = 300)
 
-##Cell-Markers2
+## Cell-Markers2
 known_markers=list("T/NK"=c('CD3E','CD4','CD8A'),
                     B=c("CD79A","MS4A1"),
                     Plasma=c("MZB1"),
@@ -85,14 +76,16 @@ plot3=DotPlot(object = seurat_obj,
   theme_pubr()+
   theme(axis.text.x = element_text(angle=90)) & NoLegend()
 
-p_know <-plot2|plot3
-ggsave("../03.Output/USOO_p_know.pdf", plot = p_know, width = 20, height = 12, dpi = 300)
+p_know <- plot2|plot3
+ggsave("../03.Output/Major-CellAnnotation/seurat_obj_cellmarkers2.pdf", plot = p_know, width = 20, height = 12, dpi = 300)
 
 # ===============================================Major Celltype Annotation===============================================
 top10 <- seurat_obj.markers %>% group_by(cluster) %>% top_n(n = 10, wt = avg_log2FC)
-DoHeatmap(seurat_obj, features = top10$gene) + NoLegend()                            # Doheatmap图
-VlnPlot(seurat_obj, features = top10$gene[1:5], pt.size=0)                           #小提琴图观察基因分布
-marker2 <- FindMarkers(object =USOO, ident.1 = 2)
+## Doheatmap图
+DoHeatmap(seurat_obj, features = top10$gene) + NoLegend()                            
+## 小提琴图观察基因分布
+VlnPlot(seurat_obj, features = top10$gene[1:5], pt.size=0)                           
+marker2 <- FindMarkers(object = , ident.1 = 2)
 marker_DEG <- FindMarkers(object = USOO, ident.1 = 10, ident.2 = 11,                 # 第二个cluster（对比组）
                                                       logfc.threshold = 0.25,        # 最小log2倍数变化（过滤微小差异）
                                                       min.pct = 0.1,                 # 基因在至少10%的细胞中表达（过滤低表达基因）
@@ -113,13 +106,13 @@ meta_supp[meta_supp$seurat_cluster %in% c(2), 'celltype'] = 'db-like'
 for (i in 1:nrow(meta_supp)) {
   seurat_obj@meta.data[which(seurat_obj$cluster_res0.5 == meta_supp$seurat_cluster[i]), 'celltype_major'] = meta_supp$celltype[i]
 }
-Idents(seurat_obj) <- 'celltype_major'
+Idents(seurat_obj) <- 'celltype_major'   #replace your metadata@celltype-name
 
 ## remove db-like cell
 seurat_obj_filtered <- subset(seurat_obj, subset = celltype_major != "db-like")
 
 # 看看注释情况
-plot4=DimPlot(seurat_obj_filtered,group.by = "celltype_major",label = T)&NoLegend()
+plot4=DimPlot(seurat_obj_filtered,group.by = "celltype_major",label = T) & NoLegend()
 plot5=DotPlot(object = seurat_obj_filtered,
               features = known_markers,
               scale=T,
@@ -130,23 +123,66 @@ plot5=DotPlot(object = seurat_obj_filtered,
 plot4|plot5
 table(seurat_obj_filtered@meta.data$celltype_major,useNA = "always")  #If NA, plot5 will error
 
+## ============!!!去除掉双细胞后需重新进行降维聚类！！！请重复上述操作！！！========================
+## 用细胞总 UMI 计数的中位数作为缩放因子消除细胞间测序差异
+seurat_obj <- NormalizeData(seurat_obj, normalization.method ="LogNormalize", 
+                            scale.factor = median(seurat_obj@meta.data$nCount_RNA))
+seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 3000) 
+
+## 计算细胞周期评分
+cc.genes.updated.2019 <- cc.genes
+s.genes <- cc.genes.updated.2019$s.genes
+g2m.genes <- cc.genes.updated.2019$g2m.genes                        
+seurat_obj <- CellCycleScoring(seurat_obj, s.features = s.genes, g2m.features = g2m.genes) 
+
+## 回归掉不感兴趣的变量
+seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent_ribo1",
+                                                        "percent_ribo2","percent_mt","percent_RBC"))
+## 使用HVG去跑PCA
+seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
+ElbowPlot(seurat_obj,ndims = 50) 
+
+## Perform Harmony batch correction
+seurat_obj <- seurat_obj %>% RunHarmony(
+  reduction = "pca",
+  group.by.vars = "orig.ident",
+  reduction.save = "harmony",    
+  plot_convergence = TRUE,
+  max.iter = 30,
+  verbose = FALSE
+)
+## Save Harmony convergence plot
+ElbowPlot(seurat_obj, reduction = "harmony", ndims = 50) + 
+  theme_minimal() + 
+  ggtitle("Elbow Plot for Harmony-Corrected Dimensions")
+ggsave(file.path(out_dir, paste0(obj_name, "_Harmony_convergence.pdf")), width = 8, height = 6, dpi = 300)
+
+seurat_obj <- RunUMAP(seurat_obj, reduction = "harmony", dims = 1:30, 
+                      reduction.name = "umap", verbose = FALSE)
+seurat_obj <- RunTSNE(seurat_obj, reduction = "harmony", dims = 1:30, 
+                      reduction.name = "tsne", verbose = FALSE)
+seurat_obj=FindNeighbors(seurat_obj,dims = 1:15,reduction = "harmony")
+seurat_obj=FindClusters(seurat_obj,resolution = 0.2)
+table(seurat_obj@meta.data$seurat_clusters)
+table(seurat_obj@meta.data$orig.ident)
+plot1=DimPlot(seurat_obj,reduction = "umap",group.by = "orig.ident",label = T,pt.size = 0.25)
+plot2=DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
+plot1|plot2
+
+
 ## save .qs
 qsave(seurat_obj_filtered, file = 'seurat_obj_post_annotation.qs')
 
 
-## CellAnnotationsMethods--2
+## CellAnnotationsMethods--2 (for choose)
 new.cluster.ids <- c("0"= "Tumor cell",
                     "1"=" Endothelial_cell",
                     "2"= "Tumor cell",
                     "3"= "MSC",
                     ...)
-seurat_obj <- RenameIdents(USOO, new.cluster.ids)
-p_umap <- DimPlot(seurat_obj,
-                  reduction = "umap",  # 若用t-SNE则改为"tsne"
-                  label = TRUE,        # 显示细胞类型标签
-                  label.size = 5,      # 标签字体大小
-                  repel = TRUE,        # 避免标签重叠
-                  cols = NULL          # 自动分配颜色（或自定义：cols = c("细胞类型1"="red", ...)）
+seurat_obj <- RenameIdents(seurat_obj, new.cluster.ids)
+p_umap <- DimPlot(seurat_obj, reduction = "umap", label = TRUE, label.size = 5, repel = TRUE,        
+                  cols = NULL          #自定义：cols = c("细胞类型1"="red", ...)
 ) + 
   ggtitle("UMAP") +
   theme(plot.title = element_text(hjust = 0.5))  # 标题居中
@@ -162,6 +198,9 @@ ggsave(
   dpi = 300
 )
 USOO@meta.data$celltype <- Idents(USOO)
+
+
+
 # ============================ 假设细胞类型注释存储在 meta.data$celltype 中===================================
 # 统计每个 orig.ident × celltype 的细胞数量
 celltype_counts <- table(USOO$orig.ident, USOO$celltype) %>% 
@@ -295,7 +334,11 @@ ggsave("../03.Output/umap.pdf", plot = p,
   )
 
 ####提取各个亚群ID
-
+## subset subtype
+T_NK <- subset(seurat_obj,subset=celltype_major=="T/NK")
+qsave(T_NK, file = "T_NK.qs")
+Monocyte <- subset(seurat_obj,subset = celltype_major=="Monocyte")
+qsave(Monocyte, file = "Monocyte.qs")
 
 
 
