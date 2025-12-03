@@ -27,7 +27,7 @@ source("sc_harmony.R")
 # ============================Load scData after QC-tutorial=================
 ## 用细胞总 UMI 计数的中位数作为缩放因子消除细胞间测序差异
 seurat_obj <- NormalizeData(seurat_obj, normalization.method ="LogNormalize", 
-                            scale.factor = median(seurat_obj@meta.data$nCount_RNA ))
+                            scale.factor = median(seurat_obj@meta.data$nCount_RNA))
 seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 3000) 
 ## 计算细胞周期评分
 s.genes <- cc.genes.updated.2019$s.genes
