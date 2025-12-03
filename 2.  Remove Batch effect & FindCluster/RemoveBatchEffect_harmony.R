@@ -36,7 +36,6 @@ g2m.genes <- cc.genes.updated.2019$g2m.genes
 seurat_obj <- CellCycleScoring(seurat_obj, s.features = s.genes, g2m.features = g2m.genes) 
 
 ## 回归掉不感兴趣的变量
-seurat_obj[["percent_ribo"]]=PercentageFeatureSet(seurat_obj, pattern = "^RPS|^RPL")
 seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent_ribo1",
                                                         "percent_ribo2","percent_mt","percent_RBC"))
 ## 使用HVG去跑PCA
