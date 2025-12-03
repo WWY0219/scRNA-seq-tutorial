@@ -17,35 +17,56 @@ set.seed(1234)
 # 查看工作路径下的文件
 list.files()
 
-
-# =========================== Subset subtype ===========================
-T_NK <-  subset(seurat_obj,subset=celltype_major=="T/NK")
-qsave(T_NK,file = "T_NK.qs")
-Mono_Macro=subset(seurat_obj,subset = celltype_major=="Mono/Macro")
-qsave(Mono_Macro,file = "Mono_Macro.qs")
-
+# =================================== Subcelltype Annotation =====================================
+## Loading Subtype
+seurat_obj <- qread("T_NK.qs")
 print(seurat_obj)
+## 用细胞总 UMI 计数的中位数作为缩放因子消除细胞间测序差异
+seurat_obj <- NormalizeData(seurat_obj, normalization.method ="LogNormalize", 
+                            scale.factor = median(seurat_obj@meta.data$nCount_RNA))
+seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 3000) 
 
-seurat_obj=NormalizeData(seurat_obj,normalization.method = "LogNormalize",
-                         scale.factor = median(seurat_obj@meta.data$nCount_RNA))
-# 计算细胞周期评分
+## 计算细胞周期评分
+cc.genes.updated.2019 <- cc.genes
 s.genes <- cc.genes.updated.2019$s.genes
-g2m.genes <- cc.genes.updated.2019$g2m.genes
-seurat_obj[["percent_ribo"]]=PercentageFeatureSet(seurat_obj, pattern = "^RPS|^RPL")
-seurat_obj <- CellCycleScoring(seurat_obj, s.features = s.genes, g2m.features = g2m.genes)
-# 回归掉不感兴趣的变量
-seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent_ribo"))
-# 使用HVG去跑PCA
-seurat_obj=RunPCA(seurat_obj)
-ElbowPlot(seurat_obj,ndims = 50)
-seurat_obj=RunHarmony(seurat_obj,group.by.vars="orig.ident")
-seurat_obj=RunUMAP(seurat_obj,dims=1:15,verbose = T,reduction = "harmony")
-seurat_obj=FindNeighbors(seurat_obj,dims = 1:15,reduction = "harmony")
-seurat_obj=FindClusters(seurat_obj,resolution = 0.2)
+g2m.genes <- cc.genes.updated.2019$g2m.genes                        
+seurat_obj <- CellCycleScoring(seurat_obj, s.features = s.genes, g2m.features = g2m.genes) 
+## 回归掉不感兴趣的变量
+seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent_ribo1",
+                                                        "percent_ribo2","percent_mt","percent_RBC"))
+## 使用HVG去跑PCA
+seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
+ElbowPlot(seurat_obj,ndims = 50) 
+
+## Perform Harmony batch correction
+seurat_obj <- seurat_obj %>% RunHarmony(
+  reduction = "pca",
+  group.by.vars = "orig.ident",
+  reduction.save = "harmony",    
+  plot_convergence = TRUE,
+  max.iter = 30,
+  verbose = FALSE
+)
+## Save Harmony convergence plot
+ElbowPlot(seurat_obj, reduction = "harmony", ndims = 50) + 
+  theme_minimal() + 
+  ggtitle("Elbow Plot for Harmony-Corrected Dimensions")
+ggsave(file.path(out_dir, paste0(obj_name, "_Harmony_convergence.pdf")), width = 8, height = 6, dpi = 300)
+
+seurat_obj <- RunUMAP(seurat_obj, reduction = "harmony", dims = 1:30, 
+                                reduction.name = "umap", verbose = T)
+seurat_obj <- RunTSNE(seurat_obj, reduction = "harmony", dims = 1:30, 
+                                reduction.name = "tsne", verbose = T)
+
+
+
+seurat_obj <- FindNeighbors(seurat_obj, dims = 1:30, reduction = "harmony")
+seurat_obj <- FindClusters(seurat_obj, resolution = 0.2)
 table(seurat_obj@meta.data$seurat_clusters)
 table(seurat_obj@meta.data$orig.ident)
-plot1=DimPlot(seurat_obj,reduction = "umap",group.by = "orig.ident",label = T,pt.size = 0.25)
-plot2=DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
+
+plot1 <- DimPlot(seurat_obj,reduction = "umap",group.by = "orig.ident",label = T,pt.size = 0.25)
+plot2 <- DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
 plot1|plot2
 # ==== 跑FindAllMarkers，发现有B细胞混杂，去除对应的cluster ====
 markers=FindAllMarkers(seurat_obj,only.pos = T,min.pct = 0.25,logfc.threshold = 0.5,test.use = "MAST")
@@ -54,11 +75,10 @@ top20_marker_genes=markers%>% group_by(cluster)%>%top_n(n=20,wt = avg_log2FC)
 seurat_obj=subset(seurat_obj,subset = !(seurat_clusters %in% c(5, 7, 8)))
 seurat_obj=NormalizeData(seurat_obj,normalization.method = "LogNormalize",
                          scale.factor = median(seurat_obj@meta.data$nCount_RNA))
-# 计算细胞周期评分
-s.genes <- cc.genes.updated.2019$s.genes
-g2m.genes <- cc.genes.updated.2019$g2m.genes
-seurat_obj[["percent_ribo"]]=PercentageFeatureSet(seurat_obj, pattern = "^RPS|^RPL")
-seurat_obj <- CellCycleScoring(seurat_obj, s.features = s.genes, g2m.features = g2m.genes)
+seurat_obj <- RunUMAP(seurat_obj, reduction = "harmony", dims = 1:30, 
+                                reduction.name = "umap", verbose = FALSE)
+seurat_obj <- RunTSNE(seurat_obj, reduction = "harmony", dims = 1:30, 
+                                reduction.name = "tsne", verbose = FALSE)
 # 回归掉不感兴趣的变量
 seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent_ribo"))
 # 使用HVG去跑PCA
@@ -207,3 +227,4 @@ ggplot(plot_data, aes(x = "", y = freq, fill = Celltype)) +
     strip.text = element_text(size = 15, face = "bold"),
     legend.position = "right"
   )
+
