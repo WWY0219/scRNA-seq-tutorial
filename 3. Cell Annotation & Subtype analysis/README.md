@@ -10,11 +10,16 @@ First, we need to clarify the file storage structure.
 -----Seurat_obj_merge_qc.rds<br>
 -----...<br>
 --02.Code<br>
------RemoveBatchEffect_harmony.R<br>
+-----31. CellAnnotation.R<br>
+-----32. CellAnnotation.R<br>
+-----33. CellAnnotation.R<br>
 --03.Output<br>
 -----../Seurat_obj_resolution_res1/<br>
 -----../Seurat_obj_resolution_res2/<br>
------../Seurat_obj_harmony.qs<br>
+-----../Seurat_obj_All.qs<br>
+-----../T_NK.qs<br>
+-----../Monocyte.qs<br>
+-----../Tumor.qs<br>
 
 ### 01.Major Cell Annotation & Subtypecell Subset
 首先我们将对第二section 找到的cluster进行大类注释。随后进行亚群提取。
@@ -27,3 +32,6 @@ We should find a best resolution for scData.<br>
 
 ### 04. SMC&Fibr subtype 
 After this, we will recieve scData with cluster_res. <br>
+
+### Final Step
+整合所有的细胞类型并输出为一个qs文件
