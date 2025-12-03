@@ -14,17 +14,17 @@ First, we need to clarify the file storage structure.
 --03.Output<br>
 -----../Seurat_obj_resolution_res1/<br>
 -----../Seurat_obj_resolution_res2/<br>
------../Seurat_obj_<br>
+-----../Seurat_obj_cellamrkers_fig/<br>
 
 ### 01.Run Harmony
-Perform separate QC for each individual sample, including the removal of Mit-related genes, RBC-related genes, and ribo-related genes. Name the sample (e.g., *`Seurat_obj_1`*) and name the output file *`seurat_obj_1_qc`*.<br>
-Perform QC and filtering based on the corresponding expression profile of each sample, and name the resulting object *`seurat_obj_1_filtered`*.<br>
+First, we perform *`NormalizeData`*, *`FindVariableFeatures`*, *`CellCycleScoring`*, *`ScaleData`* and *`RunPCA`*.<br>
+Next, we should remove *batch effect* of our multiple samples. We use *`harmony`* to operate.<br>
 
 ### 02.Run sc_resolutionfinder.R
-Remove doublets from individual samples (inferior - quality doublets are eliminated using <mark>***Doublefinder***</mark>), and name the output file *`seurat_obj_1_db`*.
+In this part, we will find the best resolution with *Function* *`sc_resolutionfinder.R`* .
 
 ### 03.Determined Best-Resolution & Cellmarekrs
-使用<mark>***Decontx***</mark>去除环境RNA污染（可选）<br>
+Draw figures of cellmarkers.<br>
 
 ### 04. 
 Save *`seurat_obj_merge`* as *`seurat_obj_merge_qc`* with format of .qs or .rds. <br>
