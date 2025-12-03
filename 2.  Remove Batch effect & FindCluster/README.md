@@ -14,7 +14,7 @@ First, we need to clarify the file storage structure.
 --03.Output<br>
 -----../Seurat_obj_resolution_res1/<br>
 -----../Seurat_obj_resolution_res2/<br>
------../Seurat_obj_cellamrkers_fig/<br>
+-----../Seurat_obj_harmony.qs<br>
 
 ### 01.Run Harmony
 First, we perform *`NormalizeData`*, *`FindVariableFeatures`*, *`CellCycleScoring`*, *`ScaleData`* and *`RunPCA`*.<br>
@@ -23,8 +23,8 @@ Next, we should remove *batch effect* of our multiple samples. We use *`harmony`
 ### 02.Run sc_resolutionfinder.R
 In this part, we will find the best resolution with *Function* *`sc_resolutionfinder.R`* .
 
-### 03.Determined Best-Resolution & Cellmarekrs
-Draw figures of cellmarkers.<br>
+### 03.Determined Best-Resolution 
+We should find a best resolution for scData.<br>
 
-### 04. 
-Save *`seurat_obj_merge`* as *`seurat_obj_merge_qc`* with format of .qs or .rds. <br>
+### Output Profile 
+After this, we will recieve scData with cluster_res. <br>
