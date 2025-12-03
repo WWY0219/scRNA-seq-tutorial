@@ -12,7 +12,7 @@ In this part, I will process quality control for my scRNA-seq data.
 ## 3. Cell Annotation & Subtype Annotation
 在这一部分将对最适Resolution的各个cluster进行细胞注释相关操作
 通过各谱系marker进行注释
-### 07. Subtype Annotation
+### Subtype Annotation
 * T/NK cell
 * Monoctye
 * Fibroblast 
