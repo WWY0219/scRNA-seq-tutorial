@@ -172,9 +172,9 @@ meta_supp[meta_supp$seurat_cluster %in% c(5), 'Celltype'] = 'Proliferative T'
 meta_supp[meta_supp$seurat_cluster %in% c(6), 'Celltype'] = 'CD8+ Residue-Memory T'
 
 for (i in 1:nrow(meta_supp)) {
-  seurat_obj@meta.data[which(seurat_obj$seurat_clusters == meta_supp$seurat_cluster[i]), 'Celltype_major'] = meta_supp$Celltype[i]
+  seurat_obj@meta.data[which(seurat_obj$seurat_clusters == meta_supp$seurat_cluster[i]), 'subtype'] = meta_supp$Celltype[i]
 }
-Idents(seurat_obj) <- 'Celltype_major'
+Idents(seurat_obj) <- 'subtype'
 
 # 看看注释情况
 CellDimPlot(
