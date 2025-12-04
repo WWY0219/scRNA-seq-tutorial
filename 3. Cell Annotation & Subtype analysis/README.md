@@ -8,6 +8,7 @@ First, we need to clarify the file storage structure.
 --01.Data<br>
 -----Seurat_obj_merge_qc.qs<br>
 -----Seurat_obj_merge_qc.rds<br>
+-----/Infercnv/genev37.txt<br>
 -----...<br>
 --02.Code<br>
 -----31. CellAnnotation.R<br>
