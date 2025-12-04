@@ -19,10 +19,10 @@ set.seed(1234)
 list.files()
 
 # =================================== Subcelltype Annotation =====================================
-## Loading Major-subtype
+## Loading Major-subtype and Subset Monocyte
 seurat_obj <- qread("seurat_obj_annotation.qs")
 DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
-seurat_obj <- subset(seurat_obj, subset=celltype_major=="T/NK")
+seurat_obj <- subset(seurat_obj, subset=celltype_major=="Mono/Macro")
 print(seurat_obj)
 
 
@@ -73,34 +73,6 @@ table(seurat_obj@meta.data$orig.ident)
 plot1 <- DimPlot(seurat_obj,reduction = "umap",group.by = "orig.ident",label = T,pt.size = 0.25)
 plot2 <- DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
 plot1|plot2
-# ==== 跑FindAllMarkers，发现有B细胞混杂，去除对应的cluster ====
-markers=FindAllMarkers(seurat_obj,only.pos = T,min.pct = 0.25,logfc.threshold = 0.5,test.use = "MAST")
-## 提取位于前列的marker genes
-top20_marker_genes=markers%>% group_by(cluster)%>%top_n(n=20,wt = avg_log2FC)
-seurat_obj=subset(seurat_obj,subset = !(seurat_clusters %in% c(5, 7, 8)))
-seurat_obj=NormalizeData(seurat_obj,normalization.method = "LogNormalize",
-                         scale.factor = median(seurat_obj@meta.data$nCount_RNA))
-seurat_obj <- RunUMAP(seurat_obj, reduction = "harmony", dims = 1:30, 
-                                reduction.name = "umap", verbose = FALSE)
-seurat_obj <- RunTSNE(seurat_obj, reduction = "harmony", dims = 1:30, 
-                                reduction.name = "tsne", verbose = FALSE)
-# 回归掉不感兴趣的变量
-seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent_ribo"))
-# 使用HVG去跑PCA
-seurat_obj=RunPCA(seurat_obj)
-ElbowPlot(seurat_obj,ndims = 50)
-seurat_obj=RunHarmony(seurat_obj,group.by.vars="orig.ident")
-seurat_obj=RunUMAP(seurat_obj,dims=1:15,verbose = T,reduction = "harmony")
-seurat_obj=FindNeighbors(seurat_obj,dims = 1:15,reduction = "harmony")
-seurat_obj=FindClusters(seurat_obj,resolution = 0.2)
-table(seurat_obj@meta.data$seurat_clusters)
-table(seurat_obj@meta.data$orig.ident)
-plot1=DimPlot(seurat_obj,reduction = "umap",group.by = "orig.ident",label = T,pt.size = 0.25)
-plot2=DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
-plot1|plot2
-markers=FindAllMarkers(seurat_obj,only.pos = T,min.pct = 0.25,logfc.threshold = 0.5,test.use = "MAST")
-## 提取位于前列的marker genes
-top20_marker_genes=markers%>% group_by(cluster)%>%top_n(n=20,wt = avg_log2FC)
 
 # ==== 加载我们要用到的marker ====
 known_markers = list(
