@@ -64,36 +64,32 @@ CNV_score$cell <- rownames(CNV_score)  # 添加细胞ID列
 
 # 2. 合并CNV score与聚类结果（便于后续分析）
 kmeans_df$cell <- rownames(kmeans_df)  # 聚类结果添加细胞ID列
-CNV_score <- CNV_score %>% 
-  inner_join(kmeans_df, by = "cell")  # 按细胞ID合并
+CNV_score <- CNV_score %>% inner_join(kmeans_df, by = "cell")  # 按细胞ID合并
 
 ##按细胞类别看 CNV score差异
 p_cnv <- ggplot(CNV_score, aes(x = class, y = CNV_score, fill = class) ) +
-  geom_violin(alpha = 0.4, scale = "width") +                                # scale="width"确保小提琴宽度一致（更美观）
+geom_violin(alpha = 0.4, scale = "width") +                                # scale="width"确保小提琴宽度一致（更美观）
   stat_boxplot(
     geom = "errorbar",
     position = position_dodge(width = 0.1),
     width = 0.1,
     color = "black"  
   ) +
-  geom_boxplot(
+geom_boxplot(
     alpha = 0.5,
     outlier.size = 0,  # 隐藏离群点（避免干扰）
     size = 0.3,
     width = 0.3,
     color = "black"   
   ) +
-  scale_fill_manual(
+scale_fill_manual(
     values = color_vec  
   ) +
-  geom_signif(comparisons = lapply(setdiff(unique(CNV_score$class), "normal"), 
-                                   function(cls) c("normal", cls)),
-                                   step_increase = 0.1,                          # 垂直间距（避免标记重叠）
-    map_signif_level = TRUE,                      # 显示*（建议开启，更直观）
-    textsize = 3,                                 # 显著性文字大小
-    vjust = 0.5                                   # 调整标记位置（避免与图形重叠）
-    ) +
-  theme_bw() +  # 白色背景主题
+geom_signif(
+    comparisons = lapply(setdiff(unique(CNV_score$class), "normal"), function(cls) c("normal", cls)),
+                         step_increase = 0.1, map_signif_level = TRUE,textsize = 3,vjust = 0.5                                   
+    ) + theme_bw() +
+    
   labs(
     x = "Cell Type",
     y = "CNV Score",
@@ -206,26 +202,36 @@ p_prop <- ggplot(cell.prop, aes(x = kmeans_class, y = proportion, fill = class))
 
 # 显示图形
 print(p_prop)
+#定义恶性细胞：整合所有信息标记细胞类型
+# 1. 添加恶性细胞标签（Type列）
+CNV_score <- CNV_score %>% 
+  dplyr::mutate(
+    Type = case_when(
+      # 条件1：非6、10聚类（正常聚类）+ 肿瘤类别 → 恶性上皮（Malignant Epi）
+      !(kmeans_class %in% c(6, 10)) & 
+        class %in% c("Basal Epithelial_Tumor", "Intermediate_Tumor", "luminal Epithelial_Tumor") ~ "Malignant Epi",
+      # 条件2：非6、10聚类 + 正常类别 → 正常上皮（Normal Epi）
+      !(kmeans_class %in% c(6, 10)) & 
+        class == "normal" ~ "Normal Epi",
+      # 条件3：6、10聚类（正常聚类）→ 正常上皮（Normal Epi）
+      kmeans_class %in% c(6, 10) ~ "Normal Epi",
+      # 其他情况：标记为NA（避免错误）
+      TRUE ~ NA_character_
+    )
+  )
 
+# 2. 匹配细胞ID：行名=细胞ID（与Seurat对象的细胞ID一致）
+rownames(CNV_score) <- CNV_score$cell
 
+# 3. 验证CNV_score与Seurat对象的细胞ID交集（避免整合时缺失）
+common_cells <- intersect(rownames(scRNA_Epi), rownames(CNV_score))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# 4. 将CNV信息（score、Type）整合回Seurat对象
+scRNA_Epi <- AddMetaData(
+  scRNA_Epi, 
+  metadata = CNV_score  # 整合CNV_score、kmeans_class、Type等信息
+)
+      
 # =================================== Infercnv HeatMap ======================================================================
 ###infercnv.references.txt: 参考细胞的CNV分值矩阵，行名是基因名，列名是细胞名
 ref_score  <- read.table('infercnv.references.txt')
