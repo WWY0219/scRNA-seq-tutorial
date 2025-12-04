@@ -2,7 +2,7 @@
 Sys.setenv(LANGUAGE = "en")
 options(stringsAsFactors = FALSE)
 rm(list=ls());gc()
-setwd("/mnt/bioSSD/VisiumHD/ref/")
+setwd("worksapce")  #replace your workspace
 getwd()
 library(qs)
 library(dplyr)
@@ -13,14 +13,19 @@ library(ggplot2)
 library(harmony)
 library(patchwork)
 library(RColorBrewer)
+library(SCP)
 set.seed(1234)
 # 查看工作路径下的文件
 list.files()
 
 # =================================== Subcelltype Annotation =====================================
-## Loading Subtype
-seurat_obj <- qread("T_NK.qs")
+## Loading Major-subtype
+seurat_obj <- qread("seurat_obj_annotation.qs")
+DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
+seurat_obj <- subset(seurat_obj, subset=celltype_major=="T/NK")
 print(seurat_obj)
+
+
 ## 用细胞总 UMI 计数的中位数作为缩放因子消除细胞间测序差异
 seurat_obj <- NormalizeData(seurat_obj, normalization.method ="LogNormalize", 
                             scale.factor = median(seurat_obj@meta.data$nCount_RNA))
