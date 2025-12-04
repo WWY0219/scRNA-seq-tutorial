@@ -67,6 +67,6 @@ ncol(seurat_obj_merge)
 ##JoinLayers
 seurat_obj_merge[["RNA"]] <- JoinLayers(seurat_obj_merge[["RNA"]])
 ## rds
-saveRDS(seurat_obj_merge, "../03.Output/seurat_obj_merge_QC.rds")
+saveRDS(seurat_obj_merge, "../03.Output/seurat_obj_merge_qc.rds")
 ## qs
-qsave(seurat_obj_merge, "../03.Output/seurat_obj_merge_QC.qs")
+qsave(seurat_obj_merge, "../03.Output/seurat_obj_merge_qc.qs")
