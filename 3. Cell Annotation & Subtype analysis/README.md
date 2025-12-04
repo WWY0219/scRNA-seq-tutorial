@@ -14,9 +14,9 @@ First, we need to clarify the file storage structure.
 -----32. CellAnnotation.R<br>
 -----33. CellAnnotation.R<br>
 --03.Output<br>
------../Seurat_obj_resolution_res1/<br>
------../Seurat_obj_resolution_res2/<br>
------../Seurat_obj_All.qs<br>
+-----../CellMarkers/<br>
+-----../InferCNV/<br>
+-----../CopyKAT/<br>
 -----../T_NK.qs<br>
 -----../Monocyte.qs<br>
 -----../Tumor.qs<br>
