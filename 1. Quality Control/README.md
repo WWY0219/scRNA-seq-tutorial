@@ -13,8 +13,9 @@ First, we need to clarify the file storage structure.
 -----QC.R<br>
 --03.Output<br>
 -----../Seurat_obj_1/<br>
------../Seurat_obj_1<br>
+-----../Seurat_obj_2/<br>
 -----../...<br>
+-----../seurat_obj_merge_qc.qs/<br>
 
 ### 01.Run sc_run.q
 Perform separate QC for each individual sample, including the removal of Mit-related genes, RBC-related genes, and ribo-related genes. Name the sample (e.g., *`Seurat_obj_1`*) and name the output file *`seurat_obj_1_qc`*.<br>
