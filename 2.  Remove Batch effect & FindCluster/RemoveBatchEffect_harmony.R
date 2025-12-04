@@ -18,27 +18,27 @@ set.seed(1234)
 
 
 # ===============================================Load scData after QC-tutorial===================================================
-seurat_obj <- readRDS("../03.Output/seurat_obj_merge_QC.rds")
+seurat_obj <- readRDS("../03.Output/seurat_obj_merge_qc.rds")
 seurat_obj[["RNA"]]=JoinLayers(seurat_obj[["RNA"]])
 print(seurat_obj)
 table(seurat_obj@meta.data$orig.ident)
 
 # ===============================================Load scData after QC-tutorial===============================================
-## 用细胞总 UMI 计数的中位数作为缩放因子消除细胞间测序差异
+## Use meadian of total UMI counts as a scaling factor to eliminate sequencing differences between cells
 seurat_obj <- NormalizeData(seurat_obj, normalization.method ="LogNormalize", 
                             scale.factor = median(seurat_obj@meta.data$nCount_RNA))
 seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 3000) 
 
-## 计算细胞周期评分
+## canculate cellcycle score
 cc.genes.updated.2019 <- cc.genes
 s.genes <- cc.genes.updated.2019$s.genes
 g2m.genes <- cc.genes.updated.2019$g2m.genes                        
 seurat_obj <- CellCycleScoring(seurat_obj, s.features = s.genes, g2m.features = g2m.genes) 
 
-## 回归掉不感兴趣的变量
+## Regress unlike variables
 seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent_ribo1",
                                                         "percent_ribo2","percent_mt","percent_RBC"))
-## 使用HVG去跑PCA
+## Run PCA with HVG
 seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
 ElbowPlot(seurat_obj,ndims = 50) 
 
