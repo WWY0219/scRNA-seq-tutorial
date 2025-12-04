@@ -1,9 +1,11 @@
 # =================================== Prepare Environment ===================================================
+## Global Settings
 Sys.setenv(LANGUAGE = "en")
 options(stringsAsFactors = FALSE)
 rm(list=ls());gc()
-setwd("workspace")  #replace your workspace
+setwd("workspace")  # replace your workspace
 getwd()
+## Loading Packages
 library(qs)
 library(dplyr)
 library(Seurat)
@@ -13,6 +15,7 @@ library(ggplot2)
 library(harmony)
 library(patchwork)
 library(RColorBrewer)
+library(SCP)
 set.seed(1234)
 
 # =================================== Load scData with celltype_major  ===================================================
@@ -21,7 +24,7 @@ Idents(seurat_obj) <- "clusters_res0.5"
 ##绘制样本和cluster的umap图
 
 
-# ===============================================Cellmarkers Figures===============================================
+# ===============================================Cellmarkers Figures======================================================
 dir.create("../03.Output/Major-CellAnnotation/")
 
 ## AllcellMarkers-1
@@ -107,23 +110,33 @@ for (i in 1:nrow(meta_supp)) {
   seurat_obj@meta.data[which(seurat_obj$cluster_res0.5 == meta_supp$seurat_cluster[i]), 'celltype_major'] = meta_supp$celltype[i]
 }
 Idents(seurat_obj) <- 'celltype_major'   #replace your metadata@celltype-name
-
-## remove db-like cell
-seurat_obj_filtered <- subset(seurat_obj, subset = celltype_major != "db-like")
-
-# 看看注释情况
-plot4=DimPlot(seurat_obj_filtered,group.by = "celltype_major",label = T) & NoLegend()
-plot5=DotPlot(object = seurat_obj_filtered,
-              features = known_markers,
-              scale=T,
-              group.by = "celltype_major")+
-  scale_color_gradientn(colors=brewer.pal(9,"Blues"))+
-  theme_pubr()+
-  theme(axis.text.x = element_text(angle=90)) & NoLegend()
-plot4|plot5
 table(seurat_obj_filtered@meta.data$celltype_major,useNA = "always")  #If NA, plot5 will error
 
+### Head annotation umap
+plot4 <- DimPlot(seurat_obj, group.by = "celltype_major", label = T) & NoLegend()
+plot5 <- DotPlot(object = seurat_obj,
+                 features = known_markers,
+                 scale=T,
+                 group.by = "celltype_major") +
+scale_color_gradientn(colors=brewer.pal(9,"Blues"))+
+theme_pubr()+
+theme(axis.text.x = element_text(angle=90)) & NoLegend()
+
+plot4 | plot5
+
+qsave(seurat_obj, "../03.Output/Major-CellAnnotation/seurat_obj_beforeremovedblike.qs")
+
+### remove db-like cell
+seurat_obj <- subset(seurat_obj, subset = celltype_major != "db-like")
+
+
 ## ============!!!去除掉双细胞后需重新进行降维聚类！！！请重复上述操作！！！========================
+### Auto Methods for re-Reduction
+source("sc_harmony.R")
+seurat_obj <- sc_harmony(seurat_obj= seurat_obj,
+                         out_dir="")
+
+### Manual Methods for re-Reduction
 ## 用细胞总 UMI 计数的中位数作为缩放因子消除细胞间测序差异
 seurat_obj <- NormalizeData(seurat_obj, normalization.method ="LogNormalize", 
                             scale.factor = median(seurat_obj@meta.data$nCount_RNA))
@@ -153,8 +166,8 @@ seurat_obj <- seurat_obj %>% RunHarmony(
 )
 ## Save Harmony convergence plot
 ElbowPlot(seurat_obj, reduction = "harmony", ndims = 50) + 
-  theme_minimal() + 
-  ggtitle("Elbow Plot for Harmony-Corrected Dimensions")
+theme_minimal() + 
+ggtitle("Elbow Plot for Harmony-Corrected Dimensions")
 ggsave(file.path(out_dir, paste0(obj_name, "_Harmony_convergence.pdf")), width = 8, height = 6, dpi = 300)
 
 seurat_obj <- RunUMAP(seurat_obj, reduction = "harmony", dims = 1:30, 
@@ -162,16 +175,17 @@ seurat_obj <- RunUMAP(seurat_obj, reduction = "harmony", dims = 1:30,
 seurat_obj <- RunTSNE(seurat_obj, reduction = "harmony", dims = 1:30, 
                       reduction.name = "tsne", verbose = FALSE)
 seurat_obj=FindNeighbors(seurat_obj,dims = 1:15,reduction = "harmony")
-seurat_obj=FindClusters(seurat_obj,resolution = 0.2)
+seurat_obj=FindClusters(seurat_obj,resolution = 0.5)
 table(seurat_obj@meta.data$seurat_clusters)
 table(seurat_obj@meta.data$orig.ident)
-plot1=DimPlot(seurat_obj,reduction = "umap",group.by = "orig.ident",label = T,pt.size = 0.25)
-plot2=DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
+plot1 <- DimPlot(seurat_obj,reduction = "umap",group.by = "orig.ident",label = T,pt.size = 0.25)
+plot2 <- DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
 plot1|plot2
 
+### Re-Annotation
 
-## save .qs
-qsave(seurat_obj_filtered, file = 'seurat_obj_post_annotation.qs')
+## save annotation
+qsave(seurat_obj, file = 'seurat_obj_annotation.qs')
 
 
 ## CellAnnotationsMethods--2 (for choose)
@@ -190,9 +204,7 @@ p_umap <- DimPlot(seurat_obj, reduction = "umap", label = TRUE, label.size = 5, 
 print(p_umap)
 
 # 保存图片
-ggsave(
-  "../03.Output/USOO_celltype_umap.pdf",
-  plot = p_umap,
+ggsave("../03.Output/USOO_celltype_umap.pdf", plot = p_umap,
   width = 10,
   height = 8,
   dpi = 300
@@ -333,12 +345,7 @@ ggsave("../03.Output/umap.pdf", plot = p,
     dpi = 300
   )
 
-####提取各个亚群ID
-## subset subtype
-T_NK <- subset(seurat_obj,subset=celltype_major=="T/NK")
-qsave(T_NK, file = "T_NK.qs")
-Monocyte <- subset(seurat_obj,subset = celltype_major=="Monocyte")
-qsave(Monocyte, file = "Monocyte.qs")
+
 
 
 
