@@ -28,17 +28,17 @@ Idents(seurat_obj) <- "clusters_res0.5"
 dir.create("../03.Output/Major-CellAnnotation/")
 
 ## AllcellMarkers-1
-cell_markers <- list(MSC =c("CD34","PDGFRA"),                                 #间充质细胞
+cell_markers <- list(MSC =c("CD34","PDGFRA"),                                 
                      immunocell= c("PTPRC"),                                  
                      T_cell = c("CD3E", "CD3D", "CD4", "CD8A"),
                      B_cell = c("MS4A1", "CD19", "CD79A"),
                      Monocyte = c("CD14", "CD68", "CSF1R", "FCGR3A", "LYZ","ITGAM"),
                      Dcs = c("CD1C", "CLEC9A", "HLA-DRA", "CD83"),
-                     NK = c("NKG7", "GNLY", "KLRD1", "NCAM1"),                      # NCAM1即CD56
+                     NK = c("NKG7", "GNLY", "KLRD1", "NCAM1"),                      
                      Mastcell = c("CPA3", "TPSAB1", "KIT"),
-                     Fibroblast = c("COL1A1", "COL3A1", "THY1", "DCN", "FAP"),      # THY1即CD90
-                     Endothelial = c("PECAM1", "VWF", "CDH5", "CLDN5", "FLT1"),     # PECAM1即CD31
-                     SMC = c("ACTA2", "MYH11", "TAGLN"),                            # 基质细胞
+                     Fibroblast = c("COL1A1", "COL3A1", "THY1", "DCN", "FAP"),      
+                     Endothelial = c("PECAM1", "VWF", "CDH5", "CLDN5", "FLT1"),     
+                     SMC = c("ACTA2", "MYH11", "TAGLN"),                            
                      SMC_cancercell =c("ACTG2","PRLR","SFRP4"),
                      ESC =c("PLN","RGS5","SUSD2"),
                      Proliferating_cell = c("MKI67", "PCNA", "TOP2A", "CCNB1"),
@@ -61,16 +61,17 @@ print(p1)
 ggsave("../03.Output/Major-CellAnnotation/seurat_obj_cellmarkers.pdf", plot = p_cellmarkers, width = 20, height = 12, dpi = 300)
 
 ## Cell-Markers2
-known_markers=list("T/NK"=c('CD3E','CD4','CD8A'),
-                    B=c("CD79A","MS4A1"),
-                    Plasma=c("MZB1"),
-                    Epithelium=c('EPCAM',"KRT8","KRT18"),
-                    Tumor=c("MKI67","FOXJ1","SOX2","SOX9"),
-                    "Mono/Macro"=c("CD14","CD68","CD163"),
-                    Mast=c("KIT"),
-                    Fibroblast=c("COL5A2",'PDGFRB'),
-                    Pericyte=c("CSPG4","RGS5"),
-                    Endothelium=c("PECAM1")) 
+major_markers <- list("T/NK" =c('CD3E','CD4','CD8A'),
+                      B=c("CD79A","MS4A1"),
+                      Plasma=c("MZB1"),
+                      Epithelial = c('EPCAM',"KRT8","KRT18"),
+                      "Mono/Macro"=c("CD14","CD68","CD163"),
+                      Mast = c("KIT"),
+                      Fibroblast = c("COL5A2",'PDGFRB'),
+                      Pericyte = c("CSPG4","RGS5"),
+                      Endothelial =c("PECAM1"),
+                      Tumor=c("MKI67","FOXJ1","SOX2","SOX9")
+                     ) 
 plot3=DotPlot(object = seurat_obj,
               features = known_markers,
               scale=T,
