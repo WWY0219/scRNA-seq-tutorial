@@ -26,24 +26,16 @@ seurat_obj <- subset(seurat_obj, subset=celltype_major=="T/NK")
 print(seurat_obj)
 
 # =================================== Subcelltype RE-reduction =====================================
-## 用细胞总 UMI 计数的中位数作为缩放因子消除细胞间测序差异
-seurat_obj <- NormalizeData(seurat_obj, normalization.method ="LogNormalize", 
-                            scale.factor = median(seurat_obj@meta.data$nCount_RNA))
+## Manual Reoperate
+seurat_obj <- NormalizeData(seurat_obj, normalization.method ="LogNormalize", scale.factor = median(seurat_obj@meta.data$nCount_RNA))
 seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 3000) 
-
-## 计算细胞周期评分
 cc.genes.updated.2019 <- cc.genes
 s.genes <- cc.genes.updated.2019$s.genes
 g2m.genes <- cc.genes.updated.2019$g2m.genes                        
 seurat_obj <- CellCycleScoring(seurat_obj, s.features = s.genes, g2m.features = g2m.genes) 
-## 回归掉不感兴趣的变量
-seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent.ribo1",
-                                                        "percent.ribo2","percent.mt","percent_RBC"))
-## 使用HVG去跑PCA
+seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent.ribo1","percent.ribo2","percent.mt","percent_RBC"))
 seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
 ElbowPlot(seurat_obj,ndims = 50) 
-
-## Perform Harmony batch correction
 seurat_obj <- seurat_obj %>% RunHarmony(
   reduction = "pca",
   group.by.vars = "orig.ident",
@@ -52,28 +44,21 @@ seurat_obj <- seurat_obj %>% RunHarmony(
   max.iter = 30,
   verbose = FALSE
 )
-## Save Harmony convergence plot
 ElbowPlot(seurat_obj, reduction = "harmony", ndims = 50) + 
   theme_minimal() + 
   ggtitle("Elbow Plot for Harmony-Corrected Dimensions")
-ggsave(file.path(out_dir, paste0(obj_name, "_Harmony_convergence.pdf")), width = 8, height = 6, dpi = 300)
 
-seurat_obj <- RunUMAP(seurat_obj, reduction = "harmony", dims = 1:30, 
-                                reduction.name = "umap", verbose = T)
-seurat_obj <- RunTSNE(seurat_obj, reduction = "harmony", dims = 1:30, 
-                                reduction.name = "tsne", verbose = T)
-
-
-
+seurat_obj <- RunUMAP(seurat_obj, reduction = "harmony", dims = 1:30, reduction.name = "umap", verbose = T)
+seurat_obj <- RunTSNE(seurat_obj, reduction = "harmony", dims = 1:30, reduction.name = "tsne", verbose = T)
 seurat_obj <- FindNeighbors(seurat_obj, dims = 1:30, reduction = "harmony")
-seurat_obj <- FindClusters(seurat_obj, resolution = 0.2)
+seurat_obj <- FindClusters(seurat_obj, resolution = 0.5)    # Resolution should be adjust
 table(seurat_obj@meta.data$seurat_clusters)
 table(seurat_obj@meta.data$orig.ident)
 
 plot1 <- DimPlot(seurat_obj,reduction = "umap",group.by = "orig.ident",label = T,pt.size = 0.25)
 plot2 <- DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
 plot1|plot2
-# ==== 跑FindAllMarkers，发现有B细胞混杂，去除对应的cluster ====
+
 markers=FindAllMarkers(seurat_obj,only.pos = T,min.pct = 0.25,logfc.threshold = 0.5,test.use = "MAST")
 ## 提取位于前列的marker genes
 top20_marker_genes=markers%>% group_by(cluster)%>%top_n(n=20,wt = avg_log2FC)
@@ -102,7 +87,9 @@ markers=FindAllMarkers(seurat_obj,only.pos = T,min.pct = 0.25,logfc.threshold = 
 ## 提取位于前列的marker genes
 top20_marker_genes=markers%>% group_by(cluster)%>%top_n(n=20,wt = avg_log2FC)
 
-# ==== 加载我们要用到的marker ====
+
+# =================================== Subcelltype Annotation =====================================
+## Marker
 known_markers = list(
   "T cell"      = c("CD3D","CD3G","CD3E","CD4","CD8A","CD8B"),
   "CD8/CD4 Tn"  = c("TCF7","SELL","LEF1","CCR7"),
@@ -179,7 +166,7 @@ Idents(seurat_obj) <- 'subtype'
 # 看看注释情况
 CellDimPlot(
   seurat_obj,
-  group.by = "celltype_major",
+  group.by = "subtype",
   theme_use = "theme_blank",
   xlab = "UMAP1",
   ylab = "UMAP2",
@@ -210,7 +197,7 @@ qsave(seurat_obj, file = 'T_NK_post_annotation.qs')
 pie_data=data.frame(
   row.names = rownames(seurat_obj@meta.data),
   sample=seurat_obj@meta.data$orig.ident,
-  Celltype=seurat_obj@meta.data$celltype_major
+  Celltype=seurat_obj@meta.data$subtype
 )
 # 统计每个患者中不同细胞类型的数量
 plot_data <- pie_data %>%
@@ -233,3 +220,18 @@ ggplot(plot_data, aes(x = "", y = freq, fill = Celltype)) +
     legend.position = "right"
   )
 
+
+# =================================== Subtype merge to Major =====================================
+subtype_df <- data.frame(
+  barcode = colnames(seurat_obj),    # cell-barcode of subtype
+  tnk_subtype = seurat_obj$subtype,  # subtype-annotation
+  row.names = colnames(seurat_obj)   # 行名设为barcode，便于匹配
+)
+head(subtype_df)
+##Loading Celltype_major
+USOO$subtype <- "Other"
+tnk_barcodes <- intersect(rownames(subtype_df), colnames(USOO))
+USOO$subtype[tnk_barcodes] <- subtype_df[tnk_barcodes, "tnk_subtype"]
+table(USOO$subtype, useNA = "always")
+
+qsave("../03.Output/seurat_obj+T_NK.qs")
