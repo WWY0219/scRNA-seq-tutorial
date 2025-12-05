@@ -18,14 +18,14 @@ set.seed(1234)
 # 查看工作路径下的文件
 list.files()
 
-# =================================== Subcelltype Annotation =====================================
+# =================================== Subcelltype Subset =====================================
 ## Loading Major-subtype
 seurat_obj <- qread("seurat_obj_annotation.qs")
 DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
 seurat_obj <- subset(seurat_obj, subset=celltype_major=="T/NK")
 print(seurat_obj)
 
-
+# =================================== Subcelltype RE-reduction =====================================
 ## 用细胞总 UMI 计数的中位数作为缩放因子消除细胞间测序差异
 seurat_obj <- NormalizeData(seurat_obj, normalization.method ="LogNormalize", 
                             scale.factor = median(seurat_obj@meta.data$nCount_RNA))
@@ -37,8 +37,8 @@ s.genes <- cc.genes.updated.2019$s.genes
 g2m.genes <- cc.genes.updated.2019$g2m.genes                        
 seurat_obj <- CellCycleScoring(seurat_obj, s.features = s.genes, g2m.features = g2m.genes) 
 ## 回归掉不感兴趣的变量
-seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent_ribo1",
-                                                        "percent_ribo2","percent_mt","percent_RBC"))
+seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent.ribo1",
+                                                        "percent.ribo2","percent.mt","percent_RBC"))
 ## 使用HVG去跑PCA
 seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
 ElbowPlot(seurat_obj,ndims = 50) 
