@@ -212,6 +212,16 @@ ggsave("../03.Output/USOO_celltype_umap.pdf", plot = p_umap,
 )
 USOO@meta.data$celltype <- Idents(USOO)
 
+# ============================ Add groupdata into meta.data ===================================
+## identify groupnames
+healthy_samples <- c("Healthy_01", "Healthy_02")  
+tumor_samples   <- c("Tumor_01", "Tumor_02")  
+
+seurat_obj@meta.data$group <- ifelse(
+  seurat_obj@meta.data$orig.ident %in% healthy_samples,         # 对照样本ID
+  "Healthy",                                             
+  "Tumor"                                            
+)
 
 
 # ============================ 假设细胞类型注释存储在 meta.data$celltype 中===================================
