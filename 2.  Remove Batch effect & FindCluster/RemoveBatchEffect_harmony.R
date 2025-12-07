@@ -14,6 +14,7 @@ library(ggplot2)
 library(patchwork)
 library(harmony)
 library(RColorBrewer)
+library(clustree)
 set.seed(1234)
 
 
@@ -57,8 +58,14 @@ ElbowPlot(seurat_obj, reduction = "harmony", ndims = 50) +
   ggtitle("Elbow Plot for Harmony-Corrected Dimensions")
 ggsave(file.path(out_dir, paste0(obj_name, "_Harmony_convergence.pdf")), width = 8, height = 6, dpi = 300)
 
+# ===============================================Find Best Resolution===============================================
+seurat_obj <- FindNeighbors(seurat_obj, reduction = "harmony", dims = 1:max_dim_harmony, verbose = FALSE)
+seurat_obj <- FindClusters(seurat_obj, 
+                           resolution = c(seq(.1,1.6,.2)), verbose = FALSE)
+clustree(seurat_obj@meta.data, prefix = "RNA_snn_res.")
 
-# ===============================================Run sc_resolutionfinder.R===============================================
+
+# ===============================================Run sc_resolutionfinder.R (!!Low Speed but you can receive Fig)===================================
 ## Loading sc_resolutionfinder.R
 source("sc_resolutionfinder.R")
 res <- seq(0.1, 1, by = 0.2)
@@ -76,8 +83,6 @@ seurat_obj <- RunTSNE(seurat_obj, reduction = "harmony", dims = 1:30,
                                 reduction.name = "tsne", verbose = FALSE)
 qsave(seurat_obj, "../03.Output/seurat_obj_harmony.qs")
 
-
-# ===============================================Find Best Resolution===============================================
 table(seurat_obj@meta.data$seurat_clusters)
 ## clustree method
 p_clustree <- clustree(seurat_obj, prefix = "cluster_res") + coord_flip()
@@ -87,7 +92,7 @@ ggsave("../03.Output/clustree.pdf",width =30 ,height =30,dpi =300)
 ## other methods (待补充）
 
 
-## Determined your resolution
+# =============================================== Determined your resolution ===================================
 levels(Idents(seurat_obj))
 Idents(seurat_obj) <- "cluster_res0.5"
 plot1=DimPlot(seurat_obj,reduction = "umap",group.by = "orig.ident",label = T)
