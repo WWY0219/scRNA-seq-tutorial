@@ -21,8 +21,8 @@ set.seed(1234)
 # =================================== Load scData with celltype_major  ===================================================
 surat_obj <- readRDS("../03.Output/seurat_obj_harmony/seurat_obj_harmony.rds")
 Idents(seurat_obj) <- "clusters_res0.5"
-##绘制样本和cluster的umap图
-
+DimPlot(pbmc, reduction = 'umap', 
+        group.by="clusters_res0.5", label = TRUE, pt.size = 0.5) + NoLegend()
 
 # ===============================================Cellmarkers Figures======================================================
 dir.create("../03.Output/Major-CellAnnotation/")
@@ -94,7 +94,7 @@ marker_DEG <- FindMarkers(object = USOO, ident.1 = 10, ident.2 = 11,            
                                                       logfc.threshold = 0.25,        # 最小log2倍数变化（过滤微小差异）
                                                       min.pct = 0.1,                 # 基因在至少10%的细胞中表达（过滤低表达基因）
                                                       test.use = "wilcox",           # 统计检验方法（默认wilcox，适用于单细胞数据）
-                                                      assay = "RNA" )                  # 使用的assay（默认"RNA"）
+                                                      assay = "RNA" )                # 使用的assay（默认"RNA"）
 
 
 ## CellAnnotationsMethods--1
@@ -111,7 +111,9 @@ for (i in 1:nrow(meta_supp)) {
   seurat_obj@meta.data[which(seurat_obj$cluster_res0.5 == meta_supp$seurat_cluster[i]), 'celltype_major'] = meta_supp$celltype[i]
 }
 Idents(seurat_obj) <- 'celltype_major'   #replace your metadata@celltype-name
-table(seurat_obj_filtered@meta.data$celltype_major,useNA = "always")  #If NA, plot5 will error
+table(seurat_obj@meta.data$celltype_major,useNA = "always")                  #If NA, plot5 will error
+table(seurat_obj@meta.data$celltype_major,
+      seurat_obj@meta.data$celltype_major)
 
 ### Head annotation umap
 plot4 <- DimPlot(seurat_obj, group.by = "celltype_major", label = T) & NoLegend()
