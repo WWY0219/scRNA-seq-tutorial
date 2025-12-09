@@ -28,6 +28,11 @@ DimPlot(
 cell_major_colors <- c("#D1352B", "#D2EBC8", "#7DBFA7", "#EE934E", "#3C77AF",
                        "#AECDE1", "#8FA4AE", "#BBDD78", "#F5D2A8", "#9B5B33",
                       "#B383B9", "EE934E")
+names(cell_major_colors) <- levels(factor(
+  x = levels(seurat_obj$celltype), 
+  levels = levels(seurat_obj$celltype), 
+  ordered = TRUE
+))
 cell_major <- seurat_obj@meta.data$celltype_major
 ## ！！按照细胞分群来分配颜色！！
 names(cell_major_colors) <- cell_major
