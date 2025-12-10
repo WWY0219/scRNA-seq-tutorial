@@ -1,3 +1,75 @@
+# ========================ComplexHeatMap============================
+markers<-FindAllMarkers(seurat_obj, only.pos=TRUE,
+                                min.pct=0.25,
+                                logfc.threshold=0.25)
+#get top 5 genes
+top_5 <-markers%>%
+  dplyr::group_by(cluster)%>%
+  dplyr::top_n(n=5,wt=avg_log2FC)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ======================geom_sc_heatmap.R==================================
 source("geom_sc_heatmap.R")
 #读取 Seurat object
