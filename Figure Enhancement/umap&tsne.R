@@ -11,12 +11,9 @@ library(ggpubr)
 library(cowplot)
 library(ggplot2)
 library(ggpubr)
-library(harmony)
 library(patchwork)
 library(RColorBrewer)
 library(scRNAtoolVis)
-library(CytoTRACE2)
-library(monocle3)
 set.seed(1234)
 # 查看工作路径下的文件
 list.files()
@@ -26,48 +23,38 @@ seurat_obj <- qread("seurat_obj.qs")
 ncol(seurat_obj)
 Idents(seurat_obj)
 
-# =========================================================ggplot2 绘制带箭头的图 ===================================================
-library(ggplot2)
+# ========================================================= ggplot2 绘制带箭头的图 ===================================================
+## Prepare data for draw
+umap <- seurat_obj@reductions$umap@cell.embeddings %>% 
+  as.data.frame() %>% 
+  cbind(cell_type = seurat_obj@meta.data$celltype) # 注释后的label信息改为cell_type
+head(umap)
 
-# ===================== 关键步骤：提前计算箭头坐标（避免在aes内引用umap$列名） =====================
-# 计算UMAP坐标最小值（仅计算1次，避免重复调用）
+## -------------- 计算UMAP坐标最小值-----------------
 min_umap1 <- min(umap$umap_1)
 min_umap2 <- min(umap$umap_2)
-# 箭头终点坐标
 x_end <- min_umap1 + 3
 y_end <- min_umap2 + 3
 
-# ===================== 绘制UMAP图（消除所有警告） =====================
-umap = seurat_obj@reductions$umap@cell.embeddings %>%  #坐标信息
-  as.data.frame() %>% 
-  cbind(cell_type = seurat_obj@meta.data$celltype) # 注释后的label信息 ，改为cell_type
-
-head(umap)
-
-
+## ---------------- 绘制UMAP图-----------------------
 p <- ggplot(umap, aes(x = umap_1, y = umap_2, color = cell_type)) +  
-  # 1. 绘制细胞点
   geom_point(size = 1, alpha = 1) +  
-  # 2. 颜色映射
   scale_color_manual(values = cell_colors) +
-  # 3. 主题美化（合并theme，避免重复）
   theme(
-    panel.grid.major = element_blank(),    # 主网格线
-    panel.grid.minor = element_blank(),    # 次网格线
-    panel.border = element_blank(),        # 边框
-    axis.title = element_blank(),          # 轴标题
-    axis.text = element_blank(),           # 轴文本
-    axis.ticks = element_blank(),          # 轴刻度
+    panel.grid.major = element_blank(),        
+    panel.grid.minor = element_blank(),   
+    panel.border = element_blank(),       
+    axis.title = element_blank(),          
+    axis.text = element_blank(),           
+    axis.ticks = element_blank(),          
     panel.background = element_rect(fill = 'white'),  # 面板背景
     plot.background = element_rect(fill = "white"),   # 绘图区背景
-    legend.title = element_blank(),        # 图例标题
-    legend.key = element_rect(fill = 'white'), # 图例背景
-    legend.text = element_text(size = 20), # 图例文本大小
-    legend.key.size = unit(1, 'cm')        # 图例符号大小
+    legend.title = element_blank(),        
+    legend.key = element_rect(fill = 'white'), 
+    legend.text = element_text(size = 20), 
+    legend.key.size = unit(1, 'cm')        
  ) +  
-  # 4. 调整图例中点的大小
   guides(color = guide_legend(override.aes = list(size = 5))) + 
-  # 5. 绘制X轴箭头（用annotate替代geom_segment，消除长度警告）
   annotate(
     "segment",
     x = min_umap1, y = min_umap2,          # 起点
@@ -75,7 +62,7 @@ p <- ggplot(umap, aes(x = umap_1, y = umap_2, color = cell_type)) +
     colour = "black", size = 1,
     arrow = arrow(length = unit(0.3, "cm"))
   ) + 
-  # 6. 绘制Y轴箭头（用annotate替代geom_segment）
+  # 绘制Y轴箭头（用annotate替代geom_segment）
   annotate(
     "segment",
     x = min_umap1, y = min_umap2,          # 起点
@@ -83,22 +70,147 @@ p <- ggplot(umap, aes(x = umap_1, y = umap_2, color = cell_type)) +
     colour = "black", size = 1,
     arrow = arrow(length = unit(0.3, "cm"))
   ) +
-  # 7. 标注X轴文字
+  # 标注X轴文字
   annotate(
     "text", 
     x = min_umap1 + 1.5, y = min_umap2 - 1, 
     label = "UMAP_1", color = "black", size = 3, fontface = "bold"
   ) + 
-  # 8. 标注Y轴文字
+  # 标注Y轴文字
   annotate(
     "text", 
     x = min_umap1 - 1, y = min_umap2 + 1.5, 
     label = "UMAP_2", color = "black", size = 3, fontface = "bold", angle = 90
   )
-# 打印图形
 print(p)
 ggsave("ULM-UMAP.pdf",width=10,height=8,dpi=300)
-# ========================================================= ggplot2绘制UMAP图========================================================
+
+# ======================================================= ggplot2绘制分面UMAP图 ======================================================
+## ------------------------准备数据（合并group+celltype） ------------------------
+umap_df <- seurat_obj@reductions$umap@cell.embeddings %>%  
+  as.data.frame() %>% 
+  cbind(
+    group = seurat_obj@meta.data$group,        
+    celltype = seurat_obj@meta.data$celltype   
+  )
+head(umap_df)
+celltype_unique <- unique(as.character(umap_df$celltype))
+
+## -------------------------计算整个UMAP的最小坐标---------------------
+min_umap1 <- min(umap_df$umap_1)
+min_umap2 <- min(umap_df$umap_2)
+x_end <- min_umap1 + 3  # X轴箭头长度
+y_end <- min_umap2 + 3  # Y轴箭头长度
+
+## -------------------------绘制分面UMAP-------------------------------
+p <- ggplot(umap_df, aes(x = umap_1, y = umap_2, color = celltype)) +  
+  geom_point(size = 1, alpha = 1) +  
+  scale_color_manual(values = cell_colors, drop = FALSE) +
+  facet_wrap(~group, ncol = 2) +
+  theme(
+    panel.grid.major = element_blank(),    
+    panel.grid.minor = element_blank(),    
+    panel.border = element_blank(),        
+    axis.title = element_blank(),          
+    axis.text = element_blank(),           
+    axis.ticks = element_blank(),          
+    panel.background = element_rect(fill = 'white'),  
+    plot.background = element_rect(fill = "white"),   
+    legend.title = element_blank(),        
+    legend.key = element_rect(fill = 'white'), 
+    legend.text = element_text(size = 12), 
+    legend.key.size = unit(0.8, 'cm'),     
+    strip.background = element_blank(),    
+    strip.text = element_text(size = 16, face = "bold"),
+    plot.margin = margin(1, 1, 2, 2, "cm")                 # 预留左下角箭头空间
+  ) +  
+  guides(color = guide_legend(override.aes = list(size = 5))) +  # 调整图例中点的大小
+  # X轴箭头（左下角）
+  annotate(
+    "segment",
+    x = min_umap1, y = min_umap2,          
+    xend = x_end, yend = min_umap2,        
+    colour = "black", size = 1.2,                             # 箭头加粗更显眼
+    arrow = arrow(length = unit(0.4, "cm"), type = "closed")  # 实心箭头
+  ) + 
+  # Y轴箭头（左下角）
+  annotate(
+    "segment",
+    x = min_umap1, y = min_umap2,          
+    xend = min_umap1, yend = y_end,        
+    colour = "black", size = 1.2,
+    arrow = arrow(length = unit(0.4, "cm"), type = "closed")
+  ) +
+  # UMAP_1文字标注（箭头下方）
+  annotate(
+    "text", 
+    x = min_umap1 + 1.5, y = min_umap2 - 1.2, 
+    label = "UMAP_1", color = "black", size = 4, fontface = "bold"
+  ) + 
+  # UMAP_2文字标注（箭头左侧，竖排）
+  annotate(
+    "text", 
+    x = min_umap1 - 1.2, y = min_umap2 + 1.5, 
+    label = "UMAP_2", color = "black", size = 4, fontface = "bold", angle = 90
+  )
+
+print(p)
+
+
+ggsave("umap_facet_single_arrow.pdf",plot = p,width = 16,  height = 8,
+       dpi = 300, device = "pdf", bg = "white")
+
+
+# ================================================ 张泽民云雾状UMAP图 ====================================================
+library(ggh4x)
+umap <- seurat_obj@reductions$umap@cell.embeddings %>% 
+  as.data.frame() %>% 
+  cbind(cell_type = seurat_obj@meta.data$celltype) # 注释后的label信息改为cell_type
+head(umap)
+
+## --------------------- Color Vector ------------------------------
+cell_colors <- c("#919ac2","#ffac98","#70a4c8","#a5a9af","#63917d","#dbd1b4","#6e729a","#9ba4bd","#c5ae5f","#b9b8d6")
+
+# 确保umap数据框的列名是umap_1/umap_2（而非UMAP_1/UMAP_2）
+# colnames(umap)[colnames(umap) == "UMAP_1"] <- "umap_1"
+# colnames(umap)[colnames(umap) == "UMAP_2"] <- "umap_2"
+
+# 计算轴范围（基于umap数据框，而非df）
+x_lim <- c(min(umap$umap_1), max(umap$umap_1))
+y_lim <- c(min(umap$umap_2), max(umap$umap_2))
+
+## ----------------------- 绘制图形------------------------------------
+p <- ggplot(umap, aes(x = umap_1, y = umap_2, color = cell_type)) +
+  geom_point(size = 0.03, shape = 16, stroke = 0) +
+  scale_color_manual(values = cell_colors) +  
+  theme_classic() +  # 使用简洁主题
+  theme(
+    plot.background = element_blank(),        # 移除背景
+    panel.grid.major = element_blank(),       # 移除主要网格线
+    panel.grid.minor = element_blank(),       # 移除次要网格线
+    plot.margin = margin(5, 5, 5, 5, "mm"),   # 修正margin写法（添加边距值）
+    axis.title.x = element_blank(),           # 移除x轴标题
+    axis.title.y = element_blank(),           # 移除y轴标题
+    axis.text = element_blank(),              # 移除坐标轴刻度标签
+    axis.ticks = element_blank(),             # 移除坐标轴刻度线
+    axis.line = element_line(
+      colour = "black", 
+      linewidth = 0.3,                        # 替代size（ggplot2 3.4+推荐linewidth）
+      arrow = arrow(length = unit(0.1, "cm"))
+    ),  
+    strip.background = element_rect(fill = '#e6bac5', color = NA),
+    strip.placement = 'outside',
+    strip.text = element_text(size = 8),
+    legend.position = "none",
+    aspect.ratio = 1
+  ) +
+  scale_x_continuous(limits = x_lim) +       # 使用提前计算的轴范围
+  scale_y_continuous(limits = y_lim)
+print(p)
+
+
+
+# ========================================================= ggplot2绘制UMAP图 ========================================================
 library(ggunchull)   # 绘制细胞群轮廓线（基于密度的凸包）
 library(ggrepel)     
 
