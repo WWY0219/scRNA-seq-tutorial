@@ -101,6 +101,49 @@ VlnPlot(seurat_obj,
         group.by = "celltype",
         pt.size = 0, ncol=5)
 
+# ==================================基于基因程序的特征对细胞进行分组===================================
+## --------------- 提取MP1-MP6的评分列 -----------------
+mp_cols <- paste0("MP", 1:6)  
+mp_score_mat <- seurat_obj@meta.data[, mp_cols]
+
+## ----------------按最高评分分配细胞群 ----------------
+### 对每个细胞，找到评分最高的MP编号
+mp_max <- apply(mp_score_mat, 1, function(x) {
+  which.max(x)
+})
+### 转换为分组标签（MP1-MP6）
+mp_group <- paste0("MP", mp_max)
+seurat_obj$MP_group <- factor(mp_group, levels = paste0("MP", 1:6))  # 设定因子水平，保证顺序
+
+## ----------------可选：处理“评分全0”的特殊细胞-----------------
+zero_cells <- which(apply(mp_score_mat, 1, sum) == 0)
+if (length(zero_cells) > 0) {
+  seurat_obj$MP_group[zero_cells] <- "Unassigned"
+  seu$MP_group <- factor(seu$MP_group, levels = c(paste0("MP", 1:6), "Unassigned"))
+  message(paste("发现", length(zero_cells), "个无活性细胞，标记为Unassigned"))
+}
+
+## ------------------ 步骤3：验证分群结果 ---------------------
+cat("MP分组细胞数统计：\n")
+print(table(seu$MP_group))
+for (i in 1:6) {
+  mp_name <- paste0("MP", i)
+  p <- VlnPlot(
+    seurat_obj,
+    features = mp_name,
+    group.by = "MP_group",
+    pt.size = 0.1,
+    cols = RColorBrewer::brewer.pal(7, "Set1")[1:7]
+  ) +
+    ggtitle(paste(mp_name, "评分在各MP_group中的分布")) +
+    theme(plot.title = element_text(size = 14))
+  print(p)
+}
+
+DimPlot(seurat_obj,group.by = "MP_group",reduction = 'tsne')
+table(seurat_obj$MP_group,seurat_obj$subcelltype)
+
+
 # ==================================整合空间分数的signature===========================================
 matrix <- seurat_obj@meta.data[,names(mp.genes)]
 
