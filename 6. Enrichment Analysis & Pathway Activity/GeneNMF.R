@@ -123,7 +123,7 @@ if (length(zero_cells) > 0) {
   message(paste("发现", length(zero_cells), "个无活性细胞，标记为Unassigned"))
 }
 
-## ------------------ 步骤3：验证分群结果 ---------------------
+## ------------------ 验证分群结果 ---------------------
 cat("MP分组细胞数统计：\n")
 print(table(seu$MP_group))
 for (i in 1:6) {
