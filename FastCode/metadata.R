@@ -4,3 +4,5 @@ name_mapping <- c(
   "Leiomyoma" = "MED12-Negative"
 )
 smc$group <- recode(smc$group, !!!name_mapping)
+
+# ====================================批量替换meta.data信息==================================
