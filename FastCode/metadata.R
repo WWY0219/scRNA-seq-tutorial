@@ -6,3 +6,4 @@ name_mapping <- c(
 smc$group <- recode(smc$group, !!!name_mapping)
 
 # ====================================批量替换meta.data信息==================================
+seurat_obj$group[seurat_obj$orig.ident == "ne1"] <- "NE"
