@@ -161,53 +161,6 @@ ggsave("umap_facet_single_arrow.pdf",plot = p,width = 16,  height = 8,
        dpi = 300, device = "pdf", bg = "white")
 
 
-# ================================================ 张泽民云雾状UMAP图 ====================================================
-library(ggh4x)
-umap <- seurat_obj@reductions$umap@cell.embeddings %>% 
-  as.data.frame() %>% 
-  cbind(cell_type = seurat_obj@meta.data$celltype) # 注释后的label信息改为cell_type
-head(umap)
-
-## --------------------- Color Vector ------------------------------
-cell_colors <- c("#919ac2","#ffac98","#70a4c8","#a5a9af","#63917d","#dbd1b4","#6e729a","#9ba4bd","#c5ae5f","#b9b8d6")
-
-# 确保umap数据框的列名是umap_1/umap_2（而非UMAP_1/UMAP_2）
-# colnames(umap)[colnames(umap) == "UMAP_1"] <- "umap_1"
-# colnames(umap)[colnames(umap) == "UMAP_2"] <- "umap_2"
-
-# 计算轴范围（基于umap数据框，而非df）
-x_lim <- c(min(umap$umap_1), max(umap$umap_1))
-y_lim <- c(min(umap$umap_2), max(umap$umap_2))
-
-## ----------------------- 绘制图形------------------------------------
-p <- ggplot(umap, aes(x = umap_1, y = umap_2, color = cell_type)) +
-  geom_point(size = 0.03, shape = 16, stroke = 0) +
-  scale_color_manual(values = cell_colors) +  
-  theme_classic() +  # 使用简洁主题
-  theme(
-    plot.background = element_blank(),        # 移除背景
-    panel.grid.major = element_blank(),       # 移除主要网格线
-    panel.grid.minor = element_blank(),       # 移除次要网格线
-    plot.margin = margin(5, 5, 5, 5, "mm"),   # 修正margin写法（添加边距值）
-    axis.title.x = element_blank(),           # 移除x轴标题
-    axis.title.y = element_blank(),           # 移除y轴标题
-    axis.text = element_blank(),              # 移除坐标轴刻度标签
-    axis.ticks = element_blank(),             # 移除坐标轴刻度线
-    axis.line = element_line(
-      colour = "black", 
-      linewidth = 0.3,                        # 替代size（ggplot2 3.4+推荐linewidth）
-      arrow = arrow(length = unit(0.1, "cm"))
-    ),  
-    strip.background = element_rect(fill = '#e6bac5', color = NA),
-    strip.placement = 'outside',
-    strip.text = element_text(size = 8),
-    legend.position = "none",
-    aspect.ratio = 1
-  ) +
-  scale_x_continuous(limits = x_lim) +       # 使用提前计算的轴范围
-  scale_y_continuous(limits = y_lim)
-print(p)
-
 
 
 # ========================================================= ggplot2绘制UMAP图 ========================================================
