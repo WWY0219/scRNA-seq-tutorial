@@ -1,29 +1,47 @@
-####gsva####
-
+# ============================================ Prepare Environment ===================================================
+Sys.setenv(LANGUAGE = "en")
+options(stringsAsFactors = FALSE)
+rm(list=ls());gc()
+setwd("workspace")
+getwd()
+library(qs)
+library(CellChat)
+library(dplyr)
+library(Seurat)
+library(ggpubr)
+library(cowplot)
 library(ggplot2)
+library(ggpubr)
+library(harmony)
+library(patchwork)
+library(RColorBrewer)
 library(clustree)
 library(cowplot)
-library(dplyr)
 library(stringr)
-library(ggsci) 
-library(patchwork) 
-library(ggpubr)
-library(RColorBrewer) 
+library(ggsci)
+library(SCP)
+library(pheatmap)
+library(ggrepel)
 library(msigdbr)
-library(qs)
 library(GSVA)
-sce <- smc
+set.seed(1234)
+list.files()
+dir.create("../03.Output/")
+
+
+# ============================================ Load Data ===================================================
+seurat_obj <- qread("seurat_obj.qs")
+
+
+
+# ============================================ GSVA Preparation ===================================================
+## windwo处理
 genesets <- msigdbr(species = "Homo sapiens", category = "C2") 
 genesets <- subset(genesets, select = c("gs_name","gene_symbol")) %>% as.data.frame()
 genesets <- split(genesets$gene_symbol, genesets$gs_name)
-#  这里的分组会决定接下来的分析哦！
-Idents(sce) <- sce$subcelltype
-expr <- AverageExpression(sce, assays = "RNA", slot = "data")[[1]]
-expr <- expr[rowSums(expr)>0,]  #选取非零基因
-expr <- as.matrix(expr)
-head(expr)
-# gsva默认开启全部线程计算
-gsvaPar <- gsvaParam(expr, genesets,maxDiff = TRUE)
+
+Idents(seurat_obj) <- seurat_obj$celltype assays = "RNA", slot = "data")[[1]]
+vaPar <- gsvaParam(expr, genesets,maxDiff = TRUE)
 gsvaPar 
 gsva.res <- gsva(gsvaPar)
 dim(gsva.res)
