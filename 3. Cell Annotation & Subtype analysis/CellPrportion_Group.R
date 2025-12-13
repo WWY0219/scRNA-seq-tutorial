@@ -135,70 +135,69 @@ print(p)
 
 
 ## ============================================ ggpubr-Visulization ========================================
-### 定义分组顺序（确保绘图顺序为NE、EU、OMA）
-group_order <- c("NE", "EU", "OMA")
+### 定义分组顺序
+group_order <- c("NE", "EU", "OMA")                          #replace your group_order
 df_plot$group <- factor(df_plot$group, levels = group_order) # 强制分组顺序
 
-# 定义自定义颜色（三组对应三种颜色）
+### 定义自定义颜色（三组对应三种颜色）
 group_colors <- c("NE" = "#3498db", "EU" = "#e74c3c", "OMA" = "#2ecc71")
-# ------------- 步骤1：定义组间比较组合（与原代码一致）-------------
-comparisons <- combn(group_order, 2, simplify = FALSE) # 生成所有两两比较组合：NE vs EU, NE vs OMA, EU vs OMA
+### 定义组间比较组合
+comparisons <- combn(group_order, 2, simplify = FALSE) # 生成所有两两比较组合
 
-# ------------- 步骤2：绘制箱线图并添加统计检验 -------------
+### 箱线图
 p <- ggboxplot(
   df_plot, 
-  x = "group",               # x轴：分组
-  y = "Th17_Treg_ratio",     # y轴：比值
-  color = "group",           # 箱线图边框颜色按group分组
-  fill = "group",            # 箱线图填充颜色按group分组
-  palette = group_colors,    # 自定义颜色（与group_colors匹配）
-  alpha = 0.7,               # 填充透明度
-  width = 0.6,               # 箱线图宽度
-  outlier.shape = NA,        # 隐藏箱线图的异常值点（后续用散点展示）
-  add = "jitter",            # 添加散点（展示每个样本的具体值）
-  add.params = list(         # 散点参数设置
+  x = "group",                                              # x轴
+  y = "Th17_Treg_ratio",                                    # y轴
+  color = "group",                                          # 箱线图边框颜色按group分组
+  fill = "group",                                           # 箱线图填充颜色按group分组
+  palette = group_colors,                                   # 自定义颜色（与group_colors匹配）
+  alpha = 0.7,                                              # 填充透明度
+  width = 0.6,                                              # 箱线图宽度
+  outlier.shape = NA,                                       # 隐藏箱线图的异常值点（后续用散点展示）
+  add = "jitter",                                           # 添加散点（展示每个样本的具体值）
+  add.params = list(                                        # 散点参数设置
     size = 3, alpha = 0.8, position = position_jitter(width = 0.2)
   ),
   legend = "right",          
-  title = "Distribution of Th17-like/Treg Ratio in NE, EU and OMA Groups", # 标题
-  xlab = "Group",            # x轴标签
-  ylab = "Th17-like / Treg Ratio",  # y轴标签
+  title = "Your Title",                                     # 标题
+  xlab = "Group",                                           # x轴标签
+  ylab = "Th17-like / Treg Ratio",                          # y轴标签
     legend.title = "Group"
 ) +
-   font("legend.title", color="black", face = "bold",size = 15)+
-  font("legend.text", color = "black")+
-  # ------------- 统计检验1：添加整体检验（如Kruskal-Wallis/ANOVA）-------------
+font("legend.title", color="black", face = "bold",size = 15)+
+font("legend.text", color = "black")+
+  # 添加整体检验（如Kruskal-Wallis/ANOVA）
   stat_compare_means(
-    method = "anova", # 整体检验方法（非参数，适合单细胞数据）；若符合正态分布，用"anova"
-    label.x = 1.5,           # 整体检验标签的x轴位置（可根据分组数调整）
+    method = "anova",                                           # 整体检验方法（非参数，适合单细胞数据）；若符合正态分布，用"anova"
+    label.x = 1.5,                                              # 整体检验标签的x轴位置（可根据分组数调整）
     label.y = max(df_plot$Th17_Treg_ratio, na.rm = TRUE) * 1.3, # y轴位置（在最上方）
-    size = 4,                # 字体大小
-    face = "bold"            # 字体加粗
+    size = 4,               
+    face = "bold"           
   ) +
-  # ------------- 统计检验2：添加组间两两比较（多重比较）-------------
+  # 添加组间两两比较（多重比较）
   stat_compare_means(
-    comparisons = comparisons, # 两两比较组合
-    method = "wilcox.test",      # kruskal.test
-    p.adjust.method = "BH",    # 多重检验校正方法（Benjamini-Hochberg）
-    map_signif_level = TRUE,   # 显示*/**/***（替代p值）
-    y.position = seq(          # 每个比较的标注位置（从上到下）
+    comparisons = comparisons,                                  # 两两比较组合
+    method = "wilcox.test",                                     # kruskal.test
+    p.adjust.method = "BH",                                     # 多重检验校正方法（Benjamini-Hochberg）
+    map_signif_level = TRUE,                                    # 显示*/**/***（替代p值）
+    y.position = seq(                                           # 每个比较的标注位置（从上到下）
       max(df_plot$Th17_Treg_ratio, na.rm = TRUE) * 1.25,
       max(df_plot$Th17_Treg_ratio, na.rm = TRUE) * 1.1,
       length.out = length(comparisons)
     ),
-    size = 4                   # 显著性标签字体大小
+    size = 4                                                     # 显著性标签字体大小
   ) +
-  #theme_pubr() + # ggpubr的默认美观主题
+  #theme_pubr() +                                                # ggpubr的默认美观主题
   border("black") +
   theme(
-       axis.line = element_line(color = "black", size = 0.5), # 边线颜色+粗细
-        plot.title = element_text(hjust = 0.5, size = 14, face = "bold"), # 标题居中、加粗
-    axis.title = element_text(size = 12), # 轴标题大小
-    axis.text = element_text(size = 10), # 轴标签大小
-    panel.grid = element_blank() # 隐藏网格线（可选）
+       axis.line = element_line(color = "black", size = 0.5),            # 边线颜色+粗细
+       plot.title = element_text(hjust = 0.5, size = 14, face = "bold"), # 标题居中、加粗
+    axis.title = element_text(size = 12),                                # 轴标题大小
+    axis.text = element_text(size = 10),                                 # 轴标签大小
+    panel.grid = element_blank()                                         # 隐藏网格线
   )
 
-# 显示图形
 print(p)
 
 
