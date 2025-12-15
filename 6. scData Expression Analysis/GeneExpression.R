@@ -1,3 +1,43 @@
+# ============================================ Prepare Environment ===================================================
+Sys.setenv(LANGUAGE = "en")
+options(stringsAsFactors = FALSE)
+rm(list=ls());gc()
+setwd("workspace")
+getwd()
+library(qs)
+library(CellChat)
+library(dplyr)
+library(Seurat)
+library(ggpubr)
+library(cowplot)
+library(ggplot2)
+library(ggpubr)
+library(harmony)
+library(patchwork)
+library(RColorBrewer)
+library(clustree)
+library(cowplot)
+library(stringr)
+library(ggsci)
+library(SCP)
+library(pheatmap)
+library(ggrepel)
+library(msigdbr)
+library(GSVA)
+set.seed(1234)
+list.files()
+dir.create("../03.Output/")
+
+
+# ============================================ Load Data ===================================================
+seurat_obj <- qread("seurat_obj.qs")
+
+
+
+
+
+
+
 Idents(LMS) <- "celltype"
 TC <- subset(LMS, idents = c("Metastatic Tumor cell","Tumor cell"))
 DimPlot(TC)
