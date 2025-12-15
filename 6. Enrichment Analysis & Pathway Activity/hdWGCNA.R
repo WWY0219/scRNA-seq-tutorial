@@ -221,11 +221,31 @@ seurat_obj <- ModuleExprScore(
 
 # ============================================ Visulization ============================================
 ## -------------------模块特征图------------------
+### "hMEs"（默认）：批次校正后的模块特征基因（harmonized MEs），适用于有批次差异的数据，展示模块的生物学表达模式
+### "MEs"：原始模块特征基因（未校正批次），适用于无批次差异的数据
+### "kME"：基因的模块内连通性（intramodular connectivity），需额外指定基因（较少用）
+### "module_score"：模块的平均表达分数（类似 Seurat 的AddModuleScore结果）
+
 ### 每个模块制作hMEs的特征图
 plot_list <- ModuleFeaturePlot(
         seurat_obj,
-        features='hMEs', # plot the hMEs
-        order=TRUE       # order so the points with highest hMEs are on top
+        reduction = "umap",
+        features='hMEs',      # 要可视化的模块特征类型
+        order=TRUE            # order so the points with highest hMEs are on top
+        seurat_obj,           # 输入的Seurat对象
+        module_names = NULL,  # 要可视化的模块名称列表
+        wgcna_name = NULL,    # hdWGCNA实验名称
+        order_points = TRUE,  # 是否按特征值大小排序点（使高值点在上）
+        restrict_range =TRUE, # 是否限制颜色范围（减少极端值影响）
+        point_size = 0.5,     # 点的大小
+        alpha = 1,            # 点的透明度
+        label_legend = FALSE, # 是否为图例添加标签
+        ucell = FALSE,        # 是否使用UCell分数可视化
+        raster = FALSE,       # 是否光栅化绘图（减少内存占用）
+        raster_dpi = 500,     # 光栅化的DPI
+        raster_scale = 1,     # 光栅化的缩放比例
+        plot_ratio = 1,       # 多模块绘图时的行列比例
+        title = TRUE          # 是否显示标题
 )
 wrap_plots(plot_list, ncol=4)
 
@@ -233,7 +253,7 @@ wrap_plots(plot_list, ncol=4)
 ## -------------------相同函数绘制hub基因特征得分------------------
 ### 每个模块制作hub scores的特征图
 plot_list <- ModuleFeaturePlot(
-        eurat_obj,
+        seurat_obj,
         features='scores', # plot the hub gene scores
         order='shuffle',   # order so cells are shuffled
         ucell = TRUE       # depending on Seurat vs UCell for gene scoring
@@ -241,7 +261,86 @@ plot_list <- ModuleFeaturePlot(
 wrap_plots(plot_list, ncol=4)
 
 
+## -------------------每个模块在不同细胞亚群中的情况每个模块在不同细胞亚群中的情况------------------
+### 每个模块在不同样本中的情况
+seurat_obj$cluster <- do.call(rbind, strsplit(as.character(seurat_obj$orig.ident), ' '))[,1]
+ModuleRadarPlot(
+        seurat_obj,
+        group.by = 'cluster',
+        barcodes = seurat_obj@meta.data %>% 
+        subset(celltype == 'celltype_1') %>% 
+        rownames(),
+        axis.label.size=4,
+        grid.label.size=4
+)
 
+
+## -------------------查看模块相关图------------------
+ModuleCorrelogram(seurat_obj)
+
+
+## -------------------气泡图------------------
+### get hMEs from seurat object
+MEs <- GetMEs(seurat_obj, harmonized=TRUE)
+modules <- GetModules(seurat_obj)
+mods <- levels(modules$module)
+mods <- mods[mods != 'grey']
+
+### add hMEs to Seurat meta-data:
+seurat_obj@meta.data <- cbind(seurat_obj@meta.data, MEs)
+
+### plot with Seurat's DotPlot function
+p <- DotPlot(seurat_obj, features=mods, group.by = 'celltype')
+### flip the x/y axes, rotate the axis labels, and change color scheme
+p <- p +
+  RotatedAxis() +
+  scale_color_gradient2(high='red', mid='grey95', low='blue')
+p
+
+
+## -------------------单模块的网络图------------------
+# 使用ModuleNetworkPlot可视化每个模块前50(数值可自定)的hub gene
+ModuleNetworkPlot(
+    seurat_obj, 
+    outdir='ModuleNetworks',       # new folder name
+    n_inner = 20,                  # number of genes in inner ring
+    n_outer = 30,                  # number of genes in outer ring
+    n_conns = Inf,                 # show all of the connections
+    plot_size=c(10,10),            # larger plotting area
+    vertex.label.cex=1             # font size
+)
+
+
+## -------------------结合hub基因的网络图------------------
+options(future.globals.maxSize = 5 * 1024^3)  # 5GB
+graphics.off()                                # 关闭绘图设备
+### hubgene network(基因数可自定)
+HubGeneNetworkPlot(
+        seurat_obj,
+        n_hubs = 2, 
+        n_other=2,
+        edge_prop = 0.75,
+        mods = 'all'
+)
+
+### 可以选择模块数
+g <- HubGeneNetworkPlot(seurat_obj,  return_graph=TRUE)
+### get the list of modules
+modules <- GetModules(seurat_obj)
+mods <- levels(modules$module)
+mods <- mods[mods != 'grey']
+
+### hubgene network
+HubGeneNetworkPlot(
+        seurat_obj,
+        n_hubs = 2, 
+        n_other= 2,
+        edge_prop = 0.75,
+        mods = mods[1:5]    # only select 5 modules
+)
+
+
+## -------------------UMAP共表达网络------------------
 
 
 
