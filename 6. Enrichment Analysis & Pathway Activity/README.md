@@ -1,4 +1,4 @@
-# EnrichMent ANalysis
+# scData Expression Analysis
 
 ## Pseudobulk Analysis
 在单细胞RNA测序（scRNA-seq）分析中，Pseudobulk分析 是一种将单个细胞的基因表达数据聚合成群体（或称为“伪样本”）的策略。<br>
