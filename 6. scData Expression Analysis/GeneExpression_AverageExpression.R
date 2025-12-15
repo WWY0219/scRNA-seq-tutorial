@@ -27,10 +27,10 @@ list.files()
 dir.create("../03.Output/")
 
 
-# ============================================ Load Data ===================================================
+# ================================================ Load Data =========================================================
 seurat_obj <- qread("seurat_obj.qs")
 
-
+# ================================================ AverageExpression =================================================
 Idents(LMS) <- "celltype"
 TC <- subset(LMS, idents = c("Tumor cell"))
 DimPlot(TC)
@@ -68,7 +68,7 @@ p1 <- ggviolin(mymatrix, x="celltype", y="KMT2C Expression",fill = "celltype",
 p1
 
 
-# ============================================== AggregateExpression =====================================
+# ============================================== AggregateExpression =============================================
 ## ------------------------------data处理----------------------------------
 av <-AggregateExpression(seurat_obj,
                          group.by = c("orig.ident","group","celltype"),
