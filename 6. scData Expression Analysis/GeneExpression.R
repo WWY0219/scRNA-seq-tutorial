@@ -33,13 +33,8 @@ dir.create("../03.Output/")
 seurat_obj <- qread("seurat_obj.qs")
 
 
-
-
-
-
-
 Idents(LMS) <- "celltype"
-TC <- subset(LMS, idents = c("Metastatic Tumor cell","Tumor cell"))
+TC <- subset(LMS, idents = c("Tumor cell"))
 DimPlot(TC)
 ##计算平均表达量
 TC.average <- AverageExpression(TC)
