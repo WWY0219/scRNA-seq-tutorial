@@ -22,9 +22,6 @@ library(ggsci)
 library(SCP)
 library(pheatmap)
 library(ggrepel)
-library(WGCNA)
-library(hdWGCNA)
-library(tidyverse)
 set.seed(1234)
 list.files()
 dir.create("../03.Output/")
@@ -32,338 +29,189 @@ dir.create("../03.Output/")
 
 # ============================================ Load Data ===================================================
 seurat_obj <- qread("seurat_obj.qs")
-Idents(seurat_obj) <- "celltype"
-DimPlot(seurat_obj,reduction = 'umap',
-        label = TRUE,pt.size = 0.5) +NoLegend()
 
-# ============================================ 为WGCNA设置Seurat对象 ========================================
-## WGCNA分析的时候会把信息储存在seurat对象的@misc槽中
-## variable: 使用存储在Seurat对象的VariableFeatures中的基因
-## fraction: 使用在整个数据集或每组细胞中表达的基因，由 group.by 指定
-## custom: 使用在Custom 列表中指定的基因
-## 一个seurat对象可以包含多个hdWGCNA实验对象
 
-## V5版本需要这行代码，V4不需要
-seurat_obj <- SeuratObject::UpdateSeuratObject(seurat_obj)
-seurat_obj <- SetupForWGCNA(
-  seurat_obj,
-  gene_select = "fraction",        # fraction(自动覆盖适合筛选）;variable(seurat_HVG);custom(自定义)
-  fraction = 0.05,                 # fraction of cells that a gene needs to be expressed in order to be included
-  wgcna_name = "celltype_1"             # the name of the hdWGCNA experiment
+# ============================================ 首先观察各个细胞亚群的相关性（验证性工作） ===================================================
+av <-AggregateExpression(seurat_obj,
+                         group.by = c("orig.ident","celltype"),
+                         assays = "RNA",
+                         slot = "counts",                              # counts适用于DEseq2；data适用于可视化、相对表达量比较                       
+                         return.seurat = FALSE)                        # 返回总的计数 
+
+## colnames为orig.ident_celltype, rownames为gene symbol
+av=as.data.frame(av[[1]])
+head(av)[1:3,1:3] 
+write.csv(av,file = 'AverageExpression_seurat_obj.csv')
+
+## 找到sd最显著的排名前1000基因
+cg <- names(tail(sort(apply(log(av+1), 
+                            1,              # 1为按行计算；2为按列计算
+                            sd)),
+                 1000)) 
+
+## 提前这些基因矩阵并进行log处理后计算不同样本对应的细胞的相关性值
+df =cor(as.matrix(log(av[cg,]+1)))
+colnames(df)
+ac=as.data.frame(str_split(colnames(df),'_',simplify = T))
+rownames(ac)=colnames(df)
+colnames(ac)[1:2] <- c("orig.ident","celltype")
+
+## seurat_obj 进行分组
+ac$group = ifelse(grepl('GSM4942397|GSM4942396|GSM4942398|GSM4942399|GSM5023319',ac$orig.ident),"control","tumor")
+table(ac$group)
+head(ac)
+## -------------------------------------------------visulazition---------------------------------------------------------
+#### 未对行列按照group进行聚类
+pheatmap::pheatmap(df ,
+                   show_colnames = F,
+                   show_rownames = F,
+                   annotation_col = ac,
+                   annotation_colors = list(
+                     group = c(LM = "red", MM = "green"),
+                     celltype = c(`FC-C0` = "orange", `SMC-C1` = "purple", `FC-C2` = "cyan")
+                   )) 
+dev.off()
+
+#### 对行列按照group进行聚类
+my_group_order <- c("LM", "MM")  
+ac$group <- factor(ac$group, levels = my_group_order)
+sample_order <- order(ac$group) 
+df_ordered <- df[sample_order, sample_order] # 表达矩阵按样本顺序调整
+ac_ordered <- ac[sample_order, ] # 注释数据按样本顺序调整
+
+pheatmap(
+  mat = df_ordered,
+  show_colnames = FALSE,               # 不显示列名
+  show_rownames = FALSE,               # 不显示行名
+  annotation_col = ac_ordered,         # 列注释
+  color = colorRampPalette(brewer.pal(9, "OrRd"))(50), 
+  cluster_cols = FALSE,                # 关闭列聚类（已按group排序）
+  cluster_rows = T,                    # 保留行聚类
+  treeheight_col = 0,                  # 隐藏列聚类树
+  treeheight_row = 20,                 # 调整行聚类树高度
+  border_color = T                     # “NA” 去掉色块边框
 )
-## !!!!手动指定要纳入 WGCNA 分析的基因列表!!!!
-custom_genes <- c("CD3D", "CD3E", "CD4", "IL2", "IFNG", "TNF", "FOXP3")  #Eg
-seurat_obj <- SetupForWGCNA(
-  seurat_obj = seurat_obj,
-  gene_select = "custom",        # 启用自定义基因筛选模式
-  custom_genes = custom_genes,   # 传入自定义基因列表（关键参数！）
-  wgcna_name = "celltype_1"      
-)
+dev.off()
 
 
-# ============================================ 各组构建metacell ============================================
-## metacells是由来自同一个生物样本的、相似细胞组成的小群体聚合而成的
-## 该过程使用k最近邻(KNN)算法来识别相似细胞的群体，然后计算这些细胞的平均或总表达量，从而生成一个metacell基因表达矩阵
-## <1 万细胞：k=10~20；>5 万细胞：k=25~50
-seurat_obj <- MetacellsByGroups(
-        seurat_obj = seurat_obj,
-        group.by = c("celltype", "orig.ident"), # 指定seurat_obj@meta.data中要分组的列
-        reduction = 'harmony',                  # 选择要执行KNN的降维
-        k = 25,                                 # KNN：k值越大，元细胞数量越少，聚合程度越高
-        max_shared = 10,                        # 两个metacell之间共享细胞的最大数目
-        ident.group = 'celltype',               # 等价于设置metacell的active.ident
-        min_cells = 100                         # 排除数量小于100的细胞亚群
-)
+# ============================================ 对于每个细胞亚群进行主成分分析 ===================================================
+av <-AggregateExpression(seurat_obj,
+                         group.by = c("orig.ident","celltype"),
+                         assays = "RNA",
+                         slot = "counts",                                                  
+                         return.seurat = FALSE)                        
 
-## normalize metacell expression matrix:
-seurat_obj <- NormalizeMetacells(seurat_obj)
+av=as.data.frame(av[[1]])
+df=log(av +1) 
+head(ac)
+celltp = unique(ac$celltype);celltp
 
-
-# ============================================ 共表达网络分析 ============================================
-## 设置表达式矩阵，使用hdWGCNA对目标细胞亚群进行共表达网络分析
-seurat_obj <- SetDatExpr(
-        seurat_obj,
-        group_name = C("celltype_1",...),                     # the name of the group of interest in the group.by column
-        group.by='celltype',                                  # the metadata column containing the cell type info. This same column should have also been used in MetacellsByGroups
-        assay = 'RNA', 
-        slot = 'data'                                         # using normalized data
-)
-
-## -------------------选择软阈值------------------------
-### "unsigned" ：不考虑相关性的正负，仅用相关性的绝对值（适用于研究基因共表达的强弱，不关注调控方向）
-### "signed"   ：考虑相关性的正负（正相关为激活，负相关为抑制，适用于研究基因调控的方向性）
-### "signed hybrid"：强调正相关，弱化负相关（常用作折中方案）
-seurat_obj <- TestSoftPowers(
-  seurat_obj,
-  powers = c(seq(1, 10, by = 1), seq(12, 30, by = 2)),
-  networkType = 'unsigned'                                    
-)
-
-### plot the results:
-plot_list <- PlotSoftPowers(seurat_obj)
-
-### assemble with patchwork
-wrap_plots(plot_list, ncol=2)
-power_table <- GetPowerTable(seurat_obj)
-head(power_table)
-
-### WGCNA和hdWGCNA的一般原则是选择使尺度自由拓扑模型拟合度(Scale Free Topology Model Fit)大于或等于0.8的最低软阈值(soft power threshold)
-### 在构建网络时，如果用户没有提供软阈值，程序会自动选择一个软阈值
-
-##-------------------构建共表达网络------------------------
-### construct co-expression network
-seurat_obj <- ConstructNetwork(
-        seurat_obj,
-        soft_power = 4,           # 自定义软阈值
-        min_power = 3,            # 自动选择软阈值时的最小阈值
-        tom_outdir = "TOM",       # TOM矩阵的输出目录
-        tom_name = 'Treg',        # TOM矩阵的文件名
-        overwrite_tom = TRUE,     # 允许覆盖已存在的同名文件
-        consensus = FALSE,        # 是否构建共识网络（多数据集整合）
-        overwrite_tom = FALSE,    # 是否覆盖已存在的TOM文件
-        blocks = NULL,            # 基因分块（处理大量基因时）
-        maxBlockSize = 30000,     # 每个块的最大基因数
-        randomSeed = 12345,       # 随机种子（保证结果可重复）
-        corType = "pearson",      # 相关性计算方法（"pearson"/"spearman"）
-        consensusQuantile = 0.3,  # 共识网络的分位数
-        networkType = "signed",   # 网络类型（"signed"/"unsigned"/"signed hybrid"）
-        TOMType = "signed",       # TOM矩阵类型
-        TOMDenom = "min",         # TOM分母的计算方式（"min" or "mean")
-        scaleTOMs = TRUE,         # 是否缩放TOM矩阵
-        calibrationQuantile =0.95,# 校准分位数
-        sampleForCalibration=TRUE,# 是否抽样校准TOM
-  sampleForCalibrationFactor=1000,# 校准抽样的因子
-        chunkSize = NULL,         # 分块处理的块大小
-        deepSplit = 4,            # 模块检测的深度分割参数
-        pamStage = FALSE,         # 是否使用PAM优化模块
-        detectCutHeight = 0.995,  # 模块检测的剪切高度
-        minModuleSize = 50,       # 最小模块基因数
-        mergeCutHeight = 0.2,     # 模块合并的剪切高度
-        saveConsensusTOMs = TRUE, # 是否保存共识TOM矩阵
-)
-
-### 可视化WGCNA树状图
-### ！！！“灰色”模块由那些未被归入任何共表达模块的基因组成。对于所有下游分析和解释，应忽略灰色模块！！！
-PlotDendrogram(seurat_obj, main='Celltye_1 hdWGCNA Dendrogram')
-
-### 检查拓扑重叠矩阵(topoligcal overlap matrix，TOM)
-TOM <- GetTOM(seurat_obj)
-TOM
-
-
-##-------------------计算模块特征基因------------------------
-### 模块特征基因(Module Eigengenes，MEs)是用于总结整个共表达模块基因表达谱的常用指标
-### 模块特征基因是通过在每个模块的基因表达矩阵子集上执行主成分(PCA)分析来计算的
-### 这些PCA矩阵的第一个主成分就是MEs。此外对MEs应用Harmony批量校正，从而得到harmony后的模块特征基因(hMEs）
-### 需要先运行ScaleData，否则harmony会报错
-# seurat_obj <- ScaleData(seurat_obj, features=VariableFeatures(seurat_obj))
-
-### 计算完整单细胞数据集中的所有MEs
-seurat_obj <- ModuleEigengenes(
-        seurat_obj,
-        group.by.vars="orig.ident"
-)
-
-### 协调模特征基因:允许用户对MEs应用Harmony批量校正，生成协调模块特征基因(hMEs)
-hMEs <- GetMEs(seurat_obj)
-
-### 提取未经过批次校正的模块特征基因（ME）
-#MEs <- GetMEs(seurat_obj, harmonized=FALSE)
-
-
-##-------------------计算模块连接性------------------------
-### 在共表达网络分析中，通常希望关注“枢纽基因”，即在每个模块内高度连接的基因。因此，希望确定每个基因的基于特征基因(eigengene)的连接性，也称为kME
-### hdWGCNA提供了ModuleConnectivity 函数，用于在完整的单细胞数据集(而不是metacell数据集)中计算基因的kME值。这个函数本质上是计算基因与模块特征基因之间的成对相关性
-### 虽然可以在整个数据集中计算所有细胞的kME，但建议在之前用于运行ConstructNetwork的细胞类型或分组中计算kME
-
-### 计算基于特征基因的连接性(kME)：关注枢纽基因
-seurat_obj <- ModuleConnectivity(
-        seurat_obj,
-        group.by = 'celltype', 
-        group_name = 'celltype_1')
-
-### 模块重命名
-seurat_obj <- ResetModuleNames(
-        seurat_obj,
-        new_name = "celltype_NEW"
-)
-
-### 绘制每个模块按kME排序的基因
-p <- PlotKMEs(seurat_obj, ncol=4)
-p
-
-
-##-------------------获取模块内部信息------------------------
-### 获取模块内部信息:这一步去除了不需要的灰色模块基因
-modules <- GetModules(seurat_obj) %>% 
-  subset(module != 'grey')
-head(modules[,1:6])
-
-### 得到枢纽基因(可以提取按kME排序的前N个枢纽基因的表格,这里选择了10)
-hub_df <- GetHubGenes(seurat_obj, n_hubs = 10)
-head(hub_df)
-
-### 保存数据
-qsave(seurat_obj, 'hdWGCNA_object.qs')
-
-
-##-------------------计算hub基因siganture得分------------------------
-### 计算每个模块前25个枢纽基因的kME得分
-library(UCell)
-seurat_obj <- ModuleExprScore(
-        seurat_obj,
-        n_genes = 25,
-        method='UCell'                # "Seurat" or "UCell"
-        #wgcna_name = NULL,
-)
+## -------------------------------------------------visulazition---------------------------------------------------------
+library("FactoMineR") 
+library("factoextra")  
+library(ggstatsplot)
+pca_list <- lapply(celltp, function(x){
+  x
+  exp <- df[,rownames(ac[ac$celltype==x,])]  
+  cg=names(tail(sort(apply(exp, 1, sd)),1000)) 
+  exp=exp[cg,]
+  dat.pca <- PCA(as.data.frame(t(exp)) , graph = FALSE)
+  group_list=ac[ac$celltype==x,'group']
+  this_title <- paste0(x,'_PCA')
+  p2 <- fviz_pca_ind(dat.pca,
+                     geom.ind = "point",   # show points only (nbut not "text")
+                     col.ind = group_list, # color by groups
+                     palette = "Dark2",
+                     addEllipses = TRUE, # Concentration ellipses
+                     legend.title = "Groups")+
+    ggtitle(this_title)+
+    theme_ggstatsplot()+
+    theme(plot.title = element_text(size=12,hjust = 0.5))
+  
+  p2
+})
+wrap_plots(pca_list, byrow = T, nrow = 2 )
 
 
 
-# ============================================ Visulization ============================================
-## -------------------模块特征图------------------
-### "hMEs"（默认）：批次校正后的模块特征基因（harmonized MEs），适用于有批次差异的数据，展示模块的生物学表达模式
-### "MEs"：原始模块特征基因（未校正批次），适用于无批次差异的数据
-### "kME"：基因的模块内连通性（intramodular connectivity），需额外指定基因（较少用）
-### "module_score"：模块的平均表达分数（类似 Seurat 的AddModuleScore结果）
 
-### 每个模块制作hMEs的特征图
-plot_list <- ModuleFeaturePlot(
-        seurat_obj,
-        reduction = "umap",
-        features='hMEs',      # 要可视化的模块特征类型
-        order=TRUE            # order so the points with highest hMEs are on top
-        seurat_obj,           # 输入的Seurat对象
-        module_names = NULL,  # 要可视化的模块名称列表
-        wgcna_name = NULL,    # hdWGCNA实验名称
-        order_points = TRUE,  # 是否按特征值大小排序点（使高值点在上）
-        restrict_range =TRUE, # 是否限制颜色范围（减少极端值影响）
-        point_size = 0.5,     # 点的大小
-        alpha = 1,            # 点的透明度
-        label_legend = FALSE, # 是否为图例添加标签
-        ucell = FALSE,        # 是否使用UCell分数可视化
-        raster = FALSE,       # 是否光栅化绘图（减少内存占用）
-        raster_dpi = 500,     # 光栅化的DPI
-        raster_scale = 1,     # 光栅化的缩放比例
-        plot_ratio = 1,       # 多模块绘图时的行列比例
-        title = TRUE          # 是否显示标题
-)
-wrap_plots(plot_list, ncol=4)
+# ============================================ DESeq2-Analysis ===================================================
+av <-AggregateExpression(seurat_obj,
+                         group.by = c("orig.ident","group"),
+                         assays = "RNA",
+                         slot = "counts",
+                         return.seurat = FALSE)  # 返回总的计数 
+av=as.data.frame(av[[1]])
+head(av)[1:3,1:3]       # 可以看到是整数矩阵
 
+## ----------------------------------------------- DESeq2 ---------------------------------------------------
+library(tibble)
+library(DESeq2)
+### Get counts matrix
+counts_res <- av
+head(counts_res)
 
-## -------------------相同函数绘制hub基因特征得分------------------
-### 每个模块制作hub scores的特征图
-plot_list <- ModuleFeaturePlot(
-        seurat_obj,
-        features='scores', # plot the hub gene scores
-        order='shuffle',   # order so cells are shuffled
-        ucell = TRUE       # depending on Seurat vs UCell for gene scoring
-)
-wrap_plots(plot_list, ncol=4)
+### generate sample level metadata
+colData <- data.frame(samples = colnames(counts_res))
+colData <- colData %>%
+  mutate(condition = ifelse(grepl('Normal', samples), 'Normal', 'Tumor')) %>%
+  column_to_rownames(var = 'samples')
 
+### !!Create DESeq2 object!! 
+dds <- DESeqDataSetFromMatrix(countData = counts_res,
+                              colData = colData,
+                              design = ~ condition) # condition 表示差异分析将基于colData的condition 变量进行
 
-## -------------------每个模块在不同细胞亚群中的情况每个模块在不同细胞亚群中的情况------------------
-### 每个模块在不同样本中的情况
-seurat_obj$cluster <- do.call(rbind, strsplit(as.character(seurat_obj$orig.ident), ' '))[,1]
-ModuleRadarPlot(
-        seurat_obj,
-        group.by = 'cluster',
-        barcodes = seurat_obj@meta.data %>% 
-        subset(celltype == 'celltype_1') %>% 
-        rownames(),
-        axis.label.size=4,
-        grid.label.size=4
-)
+### filter Counts >= 10 
+keep <- rowSums(counts(dds)) >=10
+dds <- dds[keep,]
 
+### !!run DESeq2!!
+dds <- DESeq(dds)
+resultsNames(dds)                  # Check the coefficients for the comparison
 
-## -------------------查看模块相关图------------------
-ModuleCorrelogram(seurat_obj)
+### Generate results object
+res <- results(dds, name = "condition_Normal_vs_Tumor")
+res
+resOrdered <- res[order(res$padj),]
+head(resOrdered)
+DEG =as.data.frame(resOrdered)
+DEG_deseq2 = na.omit(DEG)
 
+#添加上下调信息
+DEG_deseq2 <- DEG_deseq2 %>%
+  mutate(Type = if_else(padj > 0.05, "stable",
+                        if_else(abs(log2FoldChange) < 1, "stable",
+                                if_else(log2FoldChange >= 1, "up", "down")))) %>%
+  arrange(desc(abs(log2FoldChange))) %>% 
+  rownames_to_column("Symbol")
 
-## -------------------气泡图------------------
-### get hMEs from seurat object
-MEs <- GetMEs(seurat_obj, harmonized=TRUE)
-modules <- GetModules(seurat_obj)
-mods <- levels(modules$module)
-mods <- mods[mods != 'grey']
-
-### add hMEs to Seurat meta-data:
-seurat_obj@meta.data <- cbind(seurat_obj@meta.data, MEs)
-
-### plot with Seurat's DotPlot function
-p <- DotPlot(seurat_obj, features=mods, group.by = 'celltype')
-### flip the x/y axes, rotate the axis labels, and change color scheme
-p <- p +
-  RotatedAxis() +
-  scale_color_gradient2(high='red', mid='grey95', low='blue')
-p
+top_genes <- DEG_deseq2 %>%
+  filter(Type %in% c("up", "down")) %>% # 只选显著基因
+  group_by(Type) %>%
+  slice_head(n = 5) %>% # 每个分组选Top10
+  ungroup()
 
 
-## -------------------单模块的网络图------------------
-# 使用ModuleNetworkPlot可视化每个模块前50(数值可自定)的hub gene
-ModuleNetworkPlot(
-    seurat_obj, 
-    outdir='ModuleNetworks',       # new folder name
-    n_inner = 20,                  # number of genes in inner ring
-    n_outer = 30,                  # number of genes in outer ring
-    n_conns = Inf,                 # show all of the connections
-    plot_size=c(10,10),            # larger plotting area
-    vertex.label.cex=1             # font size
-)
-
-
-## -------------------结合hub基因的网络图------------------
-options(future.globals.maxSize = 5 * 1024^3)  # 5GB
-graphics.off()                                # 关闭绘图设备
-### hubgene network(基因数可自定)
-HubGeneNetworkPlot(
-        seurat_obj,
-        n_hubs = 2, 
-        n_other=2,
-        edge_prop = 0.75,
-        mods = 'all'
-)
-
-### 可以选择模块数
-g <- HubGeneNetworkPlot(seurat_obj,  return_graph=TRUE)
-### get the list of modules
-modules <- GetModules(seurat_obj)
-mods <- levels(modules$module)
-mods <- mods[mods != 'grey']
-
-### hubgene network
-HubGeneNetworkPlot(
-        seurat_obj,
-        n_hubs = 2, 
-        n_other= 2,
-        edge_prop = 0.75,
-        mods = mods[1:5]    # only select 5 modules
-)
-
-
-## -------------------UMAP共表达网络------------------
-seurat_obj <- RunModuleUMAP(
-  seurat_obj,
-  n_hubs = 10,       # number of hub genes to include for the UMAP embedding
-  n_neighbors=15,    # neighbors parameter for UMAP
-  min_dist=0.1       # min distance between points in UMAP space
-)
-
-### get the hub gene UMAP table from the seurat object
-umap_df <- GetModuleUMAP(seurat_obj)
-
-# plot with ggplot
-ggplot(umap_df, aes(x=UMAP1, y=UMAP2)) +
-  geom_point(
-   color=umap_df$color,  # color each point by WGCNA module
-   size=umap_df$kME*2    # size of each point based on intramodular connectivity
-  ) +
-  umap_theme()
-
-ModuleUMAPPlot(
-  seurat_obj,
-  edge.alpha=0.25,
-  sample_edges=TRUE,
-  edge_prop=0.1,        # proportion of edges to sample (20% here)
-  label_hubs=2 ,        # how many hub genes to plot per module?
-  keep_grey_edges=FALSE
-)
+ggplot(DEG_deseq2, aes(log2FoldChange,-log10(padj))) +
+  geom_point(size = 3.5, alpha = 0.8,
+             aes(color = Type),show.legend = T)  +
+  scale_color_manual(values = c("#00468B", "gray", "#E64B35")) +
+  ylim(0, 15) +
+  xlim(-10, 10) +
+  labs(x = "Log2(fold change)", y = "-log10(padj)") +
+  geom_hline(yintercept = -log10(0.05), linetype = 2, color = 'black',lwd=0.8) + 
+  geom_vline(xintercept = c(-1, 1), linetype = 2, color = 'black',lwd=0.8)+theme_bw()+
+  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())+
+  geom_label_repel(
+    data = top_genes,                        # 仅标注top基因
+    aes(label = Symbol),                     # 基因名（Symbol列）
+    size = 3,                                # 标签字体大小
+    fill = "white",                          # 标签背景色
+    alpha = 0.8,                             # 背景透明度
+    label.padding = unit(0.2, "lines"),      # 标签内边距
+    max.overlaps = Inf,                      # 允许所有标签显示（即使重叠，也会尽量分开）
+    box.padding = unit(0.3, "lines"),        # 标签与点的距离
+    point.padding = unit(0.4, "lines"),      # 点与标签框的距离
+    color = "black"                          # 标签字体颜色
+  )
