@@ -1,4 +1,4 @@
-# =========================== Prepare Environment ==============================
+# ============================================= Prepare Environment ====================================================
 Sys.setenv(LANGUAGE = "en")
 options(stringsAsFactors = FALSE)
 rm(list=ls());gc()
@@ -18,14 +18,14 @@ set.seed(1234)
 # 查看工作路径下的文件
 list.files()
 
-# =================================== Subcelltype Subset =====================================
+# ============================================== Subcelltype Subset =====================================================
 ## Loading Major-subtype
 seurat_obj <- qread("seurat_obj_annotation.qs")
 DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
 seurat_obj <- subset(seurat_obj, subset=celltype_major=="T/NK")
 print(seurat_obj)
 
-# =================================== Subcelltype RE-reduction =====================================
+# ============================================== Subcelltype RE-reduction ================================================
 ## Manual Reoperate
 seurat_obj <- NormalizeData(seurat_obj, normalization.method ="LogNormalize", scale.factor = median(seurat_obj@meta.data$nCount_RNA))
 seurat_obj <- FindVariableFeatures(seurat_obj, selection.method = "vst", nfeatures = 3000) 
@@ -88,7 +88,7 @@ markers=FindAllMarkers(seurat_obj,only.pos = T,min.pct = 0.25,logfc.threshold = 
 top20_marker_genes=markers%>% group_by(cluster)%>%top_n(n=20,wt = avg_log2FC)
 
 
-# =================================== Subcelltype Annotation =====================================
+# ============================================================= MarkerGenes View =======================================================
 ## Marker
 known_markers = list(
   "T cell"      = c("CD3D","CD3G","CD3E","CD4","CD8A","CD8B"),
@@ -110,6 +110,15 @@ known_markers = list(
   "MAIT cells"  = c("SLC4A10","ZBTB16","KLRB1"),
   "ILC"         = c("CSF2","IL1RL1")   
 )
+DotPlot(object = seurat_obj,
+        features = known_markers,
+        scale=T,
+        group.by = "seurat_clusters")+
+  scale_color_gradientn(colors=brewer.pal(9,"Blues"))+
+  theme_pubr()+
+  theme(axis.text.x = element_text(angle=90)) & NoLegend()
+
+
 tcell_markers <- list(
   # 基本谱系
   "CD4 lineage"   = c("CD4"),
@@ -130,16 +139,6 @@ tcell_markers <- list(
   "Proliferation" = c("MKI67","TOP2A","STMN1","HMGB2"),
   "Activation"    = c("TIGIT","TNFRSF9")
 )
-
-# ==== 经典气泡图，看不同cluster的marker gene表达情况 ====
-DotPlot(object = seurat_obj,
-        features = known_markers,
-        scale=T,
-        group.by = "seurat_clusters")+
-  scale_color_gradientn(colors=brewer.pal(9,"Blues"))+
-  theme_pubr()+
-  theme(axis.text.x = element_text(angle=90)) & NoLegend()
-
 DotPlot(object = seurat_obj,
         features = tcell_markers,
         scale=T,
@@ -148,7 +147,34 @@ DotPlot(object = seurat_obj,
   theme_pubr()+
   theme(axis.text.x = element_text(angle=90)) & NoLegend()
 
-# ==== 细胞注释 ====
+
+
+T_sub_marker <- list(
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ============================================================= Subcelltype Annotation =======================================================
 meta_supp = data.frame(seurat_cluster = 0:(length(unique(seurat_obj$seurat_clusters)) - 1), Celltype = NA)
 meta_supp[meta_supp$seurat_cluster %in% c(0), 'Celltype'] = 'Naive/Central Memory T'
 meta_supp[meta_supp$seurat_cluster %in% c(1), 'Celltype'] = 'CD8+ Effector T'
