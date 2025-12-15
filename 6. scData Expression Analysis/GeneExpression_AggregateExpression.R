@@ -39,7 +39,7 @@ av <-AggregateExpression(seurat_obj,
 ## av$RNA的列名格式为：orig.ident_group_celltype（由group.by的顺序决定，如"Sample1_Control_MSC"）
 av=as.data.frame(av[[1]])
 gene_agg <- as.data.frame(av["FOXP1", , drop = FALSE])              # 提取FOXP1行
-colnames(gene_agg) <- gsub("\\.", "_", colnames(foxp1_agg))         # 若列名有小数点，替换为下划线（可选）
+colnames(gene_agg) <- gsub("\\.", "_", colnames(gene_agg))         # 若列名有小数点，替换为下划线（可选）
 
 ## 将列名拆分为orig.ident、group、celltype（关键：匹配group.by的顺序）
 gene_df <- gene_agg %>%
