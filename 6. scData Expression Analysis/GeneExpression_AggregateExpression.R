@@ -38,12 +38,11 @@ av <-AggregateExpression(seurat_obj,
                          return.seurat = FALSE) 
 ## av$RNA的列名格式为：orig.ident_group_celltype（由group.by的顺序决定，如"Sample1_Control_MSC"）
 av=as.data.frame(av[[1]])
-
-foxp1_agg <- as.data.frame(av["FOXP1", , drop = FALSE])              # 提取FOXP1行
-colnames(foxp1_agg) <- gsub("\\.", "_", colnames(foxp1_agg))         # 若列名有小数点，替换为下划线（可选）
+gene_agg <- as.data.frame(av["FOXP1", , drop = FALSE])              # 提取FOXP1行
+colnames(gene_agg) <- gsub("\\.", "_", colnames(foxp1_agg))         # 若列名有小数点，替换为下划线（可选）
 
 ## 将列名拆分为orig.ident、group、celltype（关键：匹配group.by的顺序）
-foxp1_df <- foxp1_agg %>%
+gene_df <- gene_agg %>%
   t() %>%                                                            # 转置：行=orig.ident_group_celltype，列=FOXP1
   as.data.frame() %>%
   tibble::rownames_to_column(var = "group_info") %>%                 # 列名转为列
@@ -53,18 +52,18 @@ foxp1_df <- foxp1_agg %>%
     sep = "_",                                                       # 若列名分隔符是其他（如"-"），改为sep = "-"
     remove = TRUE
   ) %>%
-  rename(FOXP1_expression = FOXP1) %>%                               # 重命名表达量列
+  rename(Gene_expression = FOXP1) %>%                               # 重命名表达量列
   mutate(
     # 转换为因子（便于后续分组和可视化）
     orig.ident = factor(orig.ident),
     group = factor(group),
     celltype = factor(celltype),
     # 转换表达量为数值型（避免字符型）
-    FOXP1_expression = as.numeric(FOXP1_expression)
+    Gene_expression = as.numeric(Gene_expression)
   )
 
 ## 检查数据结构（确保分组信息正确）
-str(foxp1_df)
+str(gene_df)
 table(foxp1_df$celltype, foxp1_df$group)                              # 查看每个细胞群的group分布
 
 ## ----------------------------------统计检验---------------------------------------
