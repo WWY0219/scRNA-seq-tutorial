@@ -49,7 +49,7 @@ seurat_obj <- SetupForWGCNA(
   seurat_obj,
   gene_select = "fraction",        # fraction(自动覆盖适合筛选）;variable(seurat_HVG);custom(自定义)
   fraction = 0.05,                 # fraction of cells that a gene needs to be expressed in order to be included
-  wgcna_name = "celltype_1"             # the name of the hdWGCNA experiment
+  wgcna_name = "celltype_1"        # the name of the hdWGCNA experiment
 )
 ## !!!!手动指定要纳入 WGCNA 分析的基因列表!!!!
 custom_genes <- c("CD3D", "CD3E", "CD4", "IL2", "IFNG", "TNF", "FOXP3")  #Eg
