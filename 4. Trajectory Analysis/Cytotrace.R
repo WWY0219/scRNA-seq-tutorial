@@ -120,10 +120,78 @@ ggsave("p1.pdf",plot =p1,width=6,heigh=6,dpi=300)
 
 
 ## -------------------------------------------------------Potency category-------------------------------------------------------------
+p2 <- DimPlot(
+  seurat, 
+  reduction = reduction_name,             # 使用的降维类型
+  group.by = "CytoTRACE2_Potency",        # 分组依据：潜能分类
+  label = FALSE                           # 不显示分组标签
+) +
+  # 颜色映射：手动指定潜能分类的颜色
+  scale_color_manual(
+    values = colors,
+    name = "Potency category",            # 图例标题
+    breaks = rev(labels)                  # 图例顺序反转（与颜色匹配）
+  ) +
+  # 坐标轴标签
+  xlab(paste0(reduction_name, "1")) +
+  ylab(paste0(reduction_name, "2")) +
+  # 标题和主题样式
+  ggtitle("CytoTRACE 2") +
+  theme(
+    legend.text = element_text(size = 10),
+    legend.title = element_text(size = 12),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12),
+    plot.title = element_text(size = 12, face = "bold", hjust = 0.5, margin = margin(b = 20)),
+    aspect.ratio = 1
+  ) +
+  # 固定坐标轴范围
+  coord_cartesian(xlim = x_limits, ylim = y_limits)
+
+# 显示图2
+print(p2)
+ggsave("p2.pdf",plot =p2,width=6,heigh=6,dpi=300)
 
 
+## -------------------------------------------------------CytoTRACE2_Relative_UMAP-------------------------------------------------------------
+p3 <- FeaturePlot(
+  seurat, 
+  features = "CytoTRACE2_Relative",       # 绘图的特征列
+  reduction = reduction_name              # 使用的降维类型
+) +
+  # 颜色映射：连续渐变，对应相对分化顺序
+  scale_colour_gradientn(
+    colours = rel_colors,                 # 相对顺序的颜色系
+    na.value = "transparent",
+    limits = c(0, 1),                     # 颜色范围（0~1）
+    breaks = seq(0, 1, by = 0.2),         # 颜色刻度
+    labels = c("0.0 (More diff.)", "0.2", "0.4", "0.6", "0.8", "1.0 (Less diff.)"),  # 刻度标签
+    name = "Relative\norder \n"           # 图例标题（换行）
+  ) +
+  # 图例样式
+  guides(colour = guide_colorbar(
+    frame.colour = "black",
+    ticks.colour = "black"
+  )) +
+  # 坐标轴标签和标题
+  xlab(paste0(reduction_name, "1")) +
+  ylab(paste0(reduction_name, "2")) +
+  ggtitle("CytoTRACE 2") +
+  # 主题样式
+  theme(
+    legend.text = element_text(size = 10),
+    legend.title = element_text(size = 12),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12),
+    plot.title = element_text(size = 12, face = "bold", hjust = 0.5, margin = margin(b = 20)),
+    aspect.ratio = 1
+  ) +
+  # 固定坐标轴范围
+  coord_cartesian(xlim = x_limits, ylim = y_limits)
 
-
+# 显示图3
+print(p3)
+ggsave("p3.pdf",plot =p3,width=6,heigh=6,dpi=300)
 
 
 
