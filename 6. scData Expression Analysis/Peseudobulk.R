@@ -200,9 +200,18 @@ ggplot(DEG_deseq2, aes(log2FoldChange,-log10(padj))) +
   ylim(0, 15) +
   xlim(-10, 10) +
   labs(x = "Log2(fold change)", y = "-log10(padj)") +
-  geom_hline(yintercept = -log10(0.05), linetype = 2, color = 'black',lwd=0.8) + 
-  geom_vline(xintercept = c(-1, 1), linetype = 2, color = 'black',lwd=0.8)+theme_bw()+
-  theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank())+
+  geom_hline(yintercept = -log10(0.25), linetype = 2, color = 'black',lwd=0.8) + 
+  geom_vline(xintercept = c(-0.5, 0.5), linetype = 2, color = 'black',lwd=0.8)+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title = element_text(face = "bold",size=18),
+        axis.text = element_text(size=15),
+        legend.text = element_text(size=15),               # 图例项文本
+        legend.text.position = NULL ,               # 图例文本位置
+        legend.title = element_text(size=18)  ,            # 图例标题
+        legend.title.position = "top"               # 图例标题位置
+       )+
   geom_label_repel(
     data = top_genes,                        # 仅标注top基因
     aes(label = Symbol),                     # 基因名（Symbol列）
@@ -215,3 +224,4 @@ ggplot(DEG_deseq2, aes(log2FoldChange,-log10(padj))) +
     point.padding = unit(0.4, "lines"),      # 点与标签框的距离
     color = "black"                          # 标签字体颜色
   )
+ggsave("vocalno.pdf",height= 8,width=8,dpi=300)
