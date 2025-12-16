@@ -194,8 +194,90 @@ print(p3)
 ggsave("p3.pdf",plot =p3,width=6,heigh=6,dpi=300)
 
 
+## -------------------------------------------------------CytoTRACE2_Boxplot_byPheno-------------------------------------------------------------
+# 步骤1：预处理数据（按表型计算中位数，用于排序和颜色映射）
+mtd <- seurat@meta.data[, c("Phenotype", "CytoTRACE2_Score")]  # 提取表型和评分
+# 按表型计算中位数并排序
+medians <- mtd %>%
+  group_by(Phenotype) %>%
+  summarise(CytoTRACE2_median_per_pheno = median(CytoTRACE2_Score, na.rm = TRUE)) %>%
+  arrange(desc(CytoTRACE2_median_per_pheno))
+# 合并中位数到原数据，用于排序表型
+mtd <- mtd %>%
+  inner_join(medians, by = "Phenotype")
+# 将表型转为因子（按中位数排序，确保箱线图顺序）
+mtd$Phenotype <- factor(mtd$Phenotype, levels = medians$Phenotype)
 
+# 步骤2：绘制箱线图
+p4 <- ggplot(
+  mtd[!is.na(mtd$Phenotype), ],  # 过滤缺失表型的行
+  aes(x = Phenotype, y = CytoTRACE2_Score)  # x轴：表型，y轴：CytoTRACE2评分
+) +
+  # 箱线图：按中位数填充颜色，隐藏离群点（用jitter替代）
+  geom_boxplot(
+    aes(fill = CytoTRACE2_median_per_pheno),
+    width = 0.8,
+    alpha = 0.5,
+    outlier.shape = NA
+  ) +
+  # 散点图：添加每个细胞的点，增加细节
+  geom_jitter(
+    aes(fill = CytoTRACE2_median_per_pheno),
+    width = 0.05,  # x轴抖动范围（避免点重叠）
+    height = 0,    # y轴不抖动
+    alpha = 0.5,
+    shape = 21,    # 圆形带边框
+    stroke = 0.1,  # 边框粗细
+    size = 1       # 点大小
+  ) +
+  # 主题：经典样式（无背景网格）
+  theme_classic() +
+  # y轴刻度：0~1，间隔0.2
+  scale_y_continuous(
+    breaks = seq(0, 1, by = 0.2),
+    limits = c(0, 1),
+    # 右侧次坐标轴：显示潜能分类标签
+    sec.axis = sec_axis(
+      trans = ~.,  # 与主坐标轴一致
+      breaks = seq(0, 1, by = 1/12),  # 间隔匹配潜能分类
+      labels = c("", "Differentiated", "", "Unipotent", "", "Oligopotent", "", "Multipotent", "", "Pluripotent", "", "Totipotent", "")
+    )
+  ) +
+  # 填充颜色映射：与潜能颜色一致
+  scale_fill_gradientn(
+    colors = rev(colors),
+    breaks = seq(0, 1, by = 0.2),
+    limits = c(0, 1),
+    labels = labels
+  ) +
+  # 点的颜色映射（与填充一致，可选）
+  scale_color_gradientn(
+    colors = rev(colors),
+    breaks = seq(0, 1, by = 0.2),
+    limits = c(0, 1),
+    labels = labels
+  ) +
+  # x轴标签：自动换行（避免长标签重叠）
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  # 坐标轴标签和标题
+  labs(x = "Phenotype", y = "Potency score") +
+  ggtitle("Developmental potential by phenotype") +
+  # 主题样式：隐藏图例，调整坐标轴和刻度
+  theme(
+    legend.position = "None",  # 隐藏图例（箱线图的颜色由中位数决定，无需图例）
+    axis.text = element_text(size = 8),
+    axis.title = element_text(size = 12),
+    plot.title = element_text(size = 12, face = "bold", hjust = 0.5, margin = margin(b = 20)),
+    # 右侧次坐标轴的刻度线（仅显示潜能分类对应的刻度）
+    axis.ticks.y.right = element_line(
+      color = c("black", NA, "black", NA, "black", NA, "black", NA, "black", NA, "black", NA, "black")
+    ),
+    axis.ticks.length.y.right = unit(0.3, "cm"),  # 右侧刻度长度
+    aspect.ratio = 0.8  # 箱线图宽高比（可调整）
+  )
 
+# 显示图4
+print(p4)
 
 
 
