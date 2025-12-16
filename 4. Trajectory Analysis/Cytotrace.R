@@ -17,11 +17,12 @@ library(RColorBrewer)
 library(scRNAtoolVis)
 library(CytoTRACE2)
 library(monocle3)
+library(ggpubr)
 set.seed(1234)
 # 查看工作路径下的文件
 list.files()
 
-# ============================== Load scData for TraceAnalysis =========================
+# ============================================================ Load scData for TraceAnalysis ==================================================
 seurat_obj <- qread("seurat_obj.qs")
 ncol(seurat_obj)
 Idents(seurat_obj)
@@ -36,7 +37,7 @@ DimPlot(seurat_obj, redcution="umap", goup.by="subcelltype",pt.size=2 )
 Idents(seurat_obj)<-"subcelltype"
 levels(Idents(seurat_obj))
 
-# ============================== Run CytoTRACE2 ========================================
+# ============================================================ Run CytoTRACE2 ===================================================================
 seurat_obj_cytotrace <- cytotrace2(seurat_obj,
                         is_seurat = TRUE,
                         slot_type = "counts",
@@ -45,7 +46,7 @@ seurat_obj_cytotrace <- cytotrace2(seurat_obj,
 ## replace UMAP/TSNE
 seurat_obj_cytotrace@reductions[["umap"]] <- seurat_obj@reductions[["tsne"]] 
 
-# ============================== Plot CytoTRACE2 ========================================
+# ============================================================ Plot CytoTRACE2 =================================================================
 ## making an annotation dataframe that matches input requirements for plotData function
 annotation <- data.frame( phenotype=seurat_obj_cytotrace@meta.data$subcelltype) %>% set_rownames(., colnames(seurat_obj_cytotrace))
 ## cytoTRACE2 plot
@@ -60,6 +61,92 @@ p4 <- plots$CytoTRACE2_Boxplot_byPheno
 cyto_fig  <- (p1+p2+p3+p4) + plot_layout(ncol = 2)
 cyto_fig
 ggsave("../03.Output/cytoTRACE2_primaryfig.pdf", plot = cyto_fig, width = 10, height = 10, dpi =300)
+
+
+# ============================================================ plotData 非UMAP降维版本 =================================================================
+seurat <- seurat_obj_cytotrace                                                                           # 你的Seurat对象（含CytoTRACE2结果和降维）
+reduction_name <- "umap"                                                                                 # 降维类型（umap/tsne）
+labels <- c("Differentiated", "Unipotent", "Oligopotent", "Multipotent", "Pluripotent", "Totipotent")
+colors <- c("#9E0142", "#F46D43", "#FEE08B", "#E6F598", "#66C2A5", "#5E4FA2")                            # 潜能颜色
+rel_colors <- c("#000004FF", "#3B0F70FF", "#8C2981FF", "#DE4968FF", "#FE9F6DFF", "#FCFDBFFF")            # 相对顺序颜色
+
+# 提取降维坐标的范围（用于固定坐标轴，避免图形偏移）
+embeddings <- seurat@reductions[[reduction_name]]@cell.embeddings
+x_limits <- range(embeddings[, 1], na.rm = TRUE)
+y_limits <- range(embeddings[, 2], na.rm = TRUE)
+
+# 预处理：计算CytoTRACE2_Score_clipped（用于第一张图的颜色映射）
+seurat@meta.data[["CytoTRACE2_Score_clipped"]] <- 5.5 - 6 * seurat@meta.data[["CytoTRACE2_Score"]]
+seurat@meta.data[["CytoTRACE2_Score_clipped"]] <- -pmax(pmin(seurat@meta.data[["CytoTRACE2_Score_clipped"]], 5), 0)
+
+## -------------------------------------------------------Potency score-------------------------------------------------------------
+p1 <- FeaturePlot(
+  seurat, 
+  features = "CytoTRACE2_Score_clipped",  # 绘图的特征列
+  reduction = reduction_name              # 使用的降维类型
+) +
+  # 颜色映射：连续渐变，对应潜能标签
+  scale_colour_gradientn(
+    colours = rev(colors),                # 颜色反转（与潜能匹配）
+    na.value = "transparent",             # 缺失值透明
+    labels = labels,                      # 图例标签
+    limits = c(-5, 0),                    # 颜色范围（与clipped值匹配）
+    name = "Potency score \n"             # 图例标题
+  ) +
+  # 图例样式：黑色边框和刻度
+  guides(colour = guide_colorbar(
+    frame.colour = "black",
+    ticks.colour = "black"
+  )) +
+  # 坐标轴标签（动态匹配降维类型）
+  xlab(paste0(reduction_name, "1")) +
+  ylab(paste0(reduction_name, "2")) +
+  # 标题和主题样式
+  ggtitle("CytoTRACE 2") +
+  theme(
+    legend.text = element_text(size = 10),
+    legend.title = element_text(size = 12),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 12),
+    plot.title = element_text(size = 12, face = "bold", hjust = 0.5, margin = margin(b = 20)),
+    aspect.ratio = 1  # 固定宽高比为1:1
+  ) +
+  # 固定坐标轴范围（避免不同图的坐标偏移）
+  coord_cartesian(xlim = x_limits, ylim = y_limits)
+
+# 显示图1
+print(p1)
+ggsave("p1.pdf",plot =p1,width=6,heigh=6,dpi=300)
+
+
+## -------------------------------------------------------Potency category-------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Other Figures 
 cyto_featureplot <- FeaturePlot(seurat_obj_cytotrace, "CytoTRACE2_Relative", pt.size = 1.5) + 
