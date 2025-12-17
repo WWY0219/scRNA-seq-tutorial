@@ -98,18 +98,18 @@ cds <- estimateDispersions(cds)
 ## ------------------------------Selecting genes with high dispersion across cells---------------
 ## ---------挑选细胞间高度离散的基因 高度离散基因的筛选标准，可根据数据情况设置mean_expression的值------------
 
-## Method-1(使用seurat选择的高变基因）
+### Method-1(使用seurat选择的高变基因）
 express_genes <- VariableFeatures(seurat_obj)
 cds <- setOrderingFilter(cds,express_genes)
 plot_ordering_genes(cds)
 
-## Method-2(使用clusters差异表达基因）
+### Method-2(使用clusters差异表达基因）
 deg.cluster <- FindAllMarkers(seurat_obj)
 express_genes <- subset(deg.cluster, p_val_adj<0.05)$gene
 cds <- setOrderingFilter(cds,express_genes)
 plot_ordering_genes(cds)
 
-## Method-3（使用monocle选择的高变基因）
+### Method-3（使用monocle选择的高变基因）
 disp_table <- dispersionTable(cds)
 ordering_genes_temp <- subset(disp_table, mean_expression >= 0.1  & dispersion_empirical >= 1 * dispersion_fit) 
 ordering_genes<-ordering_genes_temp$gene_id
@@ -121,9 +121,67 @@ dev.off()
 
 
 
+## ------------------------------逆时间轴轨迹构建和在逆时间内排列细胞-------------------------
+### 用DDRTree构建trajectory
+tryCatch({
+  cds <- reduceDimension(cds, max_components = 2, method = 'DDRTree')
+}, error = function(e) {
+  print("Error in reduceDimension(). Try to apply auto_param_selection = F")
+  cds <- reduceDimension(cds, max_components = 2, method = 'DDRTree',auto_param_selection = F)
+})
 
+### order cells along the trajectory
+cds <- orderCells(cds)
+cds <- orderCells(cds,root_state = 1)  # 自定义root_state
 
+cds$barcode <- colnames(cds)
+rep <- as.data.frame(pData(cds))
+write.table(pData(cds), "cell_Pseudotime.txt", row.names = T, quote = F,sep=',')
 
+state_levels <- levels(pData(cds)$State)
+if (length(state_levels) <= 2){
+  widths_state = 8
+  heights_state = 5
+  nrows_state = 1
+}else if(1 < length(state_levels) & length(state_levels) <= 8){
+  widths_state = length(state_levels)*1.5
+  heights_state = length(state_levels)*1.5
+  nrows_state = 2
+}else{
+  widths_state = length(state_levels)*1.5
+  heights_state = length(state_levels)*1.5
+  nrows_state = 3
+}
+
+celltype_levels <-levels(gbm_cds$celltype)
+if (length(celltype_levels) <= 2){
+  widths_celltype = 8
+  heights_celltype = 5
+  nrows_celltype = 1
+}else if(1 < length(celltype_levels) & length(celltype_levels) <= 8){
+  widths_celltype = length(celltype_levels)*1.5
+  heights_celltype = length(celltype_levels)*1.5
+  nrows_celltype = 2
+}else{
+  widths = length(celltype_levels)*1.5
+  heights = length(celltype_levels)*1.5
+  nrows = 3
+}
+
+sample_levels <-levels(gbm_cds$orig.ident)
+if (length(celltype_levels) <= 2){
+  widths_orig = 8
+  heights_orig = 5
+  nrows_orig = 1
+}else if(1 < length(celltype_levels) & length(celltype_levels) <= 8){
+  widths_orig = length(celltype_levels)*1.5
+  heights_orig = length(celltype_levels)*1.5
+  nrows_orig = 2
+}else{
+  widths_orig = length(celltype_levels)*1.5
+  heights_orig = length(celltype_levels)*1.5
+  nrows_orig = 3
+}
 
 
 
