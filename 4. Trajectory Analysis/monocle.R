@@ -121,7 +121,7 @@ dev.off()
 
 
 
-## ------------------------------逆时间轴轨迹构建和在逆时间内排列细胞-------------------------
+## ----------------------------------------------------逆时间轴轨迹构建和在逆时间内排列细胞-----------------------------------------------
 ### 用DDRTree构建trajectory
 tryCatch({
   cds <- reduceDimension(cds, max_components = 2, method = 'DDRTree')
@@ -138,6 +138,7 @@ cds$barcode <- colnames(cds)
 rep <- as.data.frame(pData(cds))
 write.table(pData(cds), "cell_Pseudotime.txt", row.names = T, quote = F,sep=',')
 
+### 对state_levels画图的大小进行定义
 state_levels <- levels(pData(cds)$State)
 if (length(state_levels) <= 2){
   widths_state = 8
@@ -153,7 +154,10 @@ if (length(state_levels) <= 2){
   nrows_state = 3
 }
 
-celltype_levels <-levels(gbm_cds$celltype)
+
+## --------------------------------------------------------------Visulazition----------------------------------------------------------------
+### 对"celltype" 画图的大小进行定义!!!需要修改！！！
+celltype_levels <-levels(cds$celltype)
 if (length(celltype_levels) <= 2){
   widths_celltype = 8
   heights_celltype = 5
@@ -168,7 +172,8 @@ if (length(celltype_levels) <= 2){
   nrows = 3
 }
 
-sample_levels <-levels(gbm_cds$orig.ident)
+### 对"sample" 画图的大小进行定义
+sample_levels <-levels(cds$orig.ident)
 if (length(celltype_levels) <= 2){
   widths_orig = 8
   heights_orig = 5
@@ -182,6 +187,115 @@ if (length(celltype_levels) <= 2){
   heights_orig = length(celltype_levels)*1.5
   nrows_orig = 3
 }
+
+### Pseudotime_Score
+p1 <-plot_cell_trajectory(cds, color_by = "Pseudotime")  + theme(plot.title = element_text(hjust = 0.5),legend.position = "top")
+p1
+ggsave(p1,file = paste0(outputDir,"/","1_Pseudotime_trajectory.pdf"), width = 8, height = 6, dpi=300, limitsize = FALSE)
+p1 <-plot_cell_trajectory(cds, color_by = "Pseudotime")  + theme(plot.title = element_text(hjust = 0.5),legend.position = "top")+facet_wrap(~orig.ident)
+p1
+ggsave(p1,file = paste0(outputDir,"/","2_Pseudotime_trajectory_splited_by_orig.pdf"), width = widths_orig, height = heights_orig,limitsize = FALSE)
+
+### state_Score
+p2 <-plot_cell_trajectory(cds, color_by = "State") +scale_color_manual(values=colsp)+
+  ggtitle("State") + theme(plot.title = element_text(hjust = 0.5),legend.position = "right")
+p2
+p2 <-plot_cell_trajectory(cds, color_by = "State", cell_size = 0.5,cell_link_size = 0.5) +
+  facet_wrap(~State, nrow = nrows_state, scales = "free")+
+  scale_color_manual(values=colsp)+ggtitle("State") + theme(plot.title = element_text(hjust = 0.5),legend.position = "right")
+p2
+p2 <-plot_cell_trajectory(cds, color_by = "State", cell_size = 0.5,cell_link_size = 0.5) +facet_wrap(~orig.ident, nrow = nrows_orig,scales = "free")+scale_color_manual(values=colsp)+ggtitle("State") + theme(plot.title = element_text(hjust = 0.5),legend.position = "right")
+p2
+p2 <- ggplot(rep, aes(Pseudotime, fill = State)) +geom_density() +facet_wrap(~State,nrow =nrows_state, scales = "free_y") +
+  theme_bw() +RotatedAxis() +
+  theme(
+    strip.text = element_blank(),
+    strip.background = element_rect(color = "white", fill = "white"),
+    panel.grid = element_blank()
+  ) +scale_fill_manual(values = colsp)
+p2
+
+### celltype
+p3 <-plot_cell_trajectory(gbm_cds, color_by = 'celltype')+scale_color_manual(values=MYCOLOR)+
+  ggtitle('celltype') + theme(plot.title = element_text(hjust = 0.5),legend.position = "right")
+p3
+ggsave(p3 ,file =paste0(outputDir,"/","7_Celltype_trajectory.pdf"), width = 8, height = 6,limitsize = FALSE)
+
+# celltype splited by orig.ident
+p3 <-plot_cell_trajectory(gbm_cds, color_by = 'celltype')+scale_color_manual(values=MYCOLOR)+facet_wrap(~orig.ident)+
+  ggtitle('celltype') + theme(plot.title = element_text(hjust = 0.5),legend.position = "right")
+p3
+ggsave(p3 ,file =paste0(outputDir,"/","8_Celltype_trajectory_splited_by_orig.pdf"), width = widths_orig, height = heights_orig,limitsize = FALSE)
+
+p3 <-plot_cell_trajectory(gbm_cds, color_by = 'celltype', cell_size = 0.5,cell_link_size = 0.5) +facet_wrap(~celltype, nrow = nrows_celltype, scales = "free")+scale_color_manual(values=MYCOLOR)+ggtitle('celltype') + theme(plot.title = element_text(hjust = 0.5),legend.position = "right")
+p3
+ggsave(p3 ,file =paste0(outputDir,"/","9_Celltype_trajectory_splited_by_celltype.pdf"), width = widths_celltype, height = heights_celltype,limitsize = FALSE)
+
+p3 <- ggplot(rep, aes(Pseudotime, fill = celltype)) +geom_density() +facet_grid(~celltype, scales = "free_y") +theme_bw() +RotatedAxis() +theme(
+  strip.text = element_blank(),
+  strip.background = element_rect(color = "white", fill = "white"),
+  panel.grid = element_blank()
+) +scale_fill_manual(values = MYCOLOR)
+p3
+ggsave(p3 ,file =paste0(outputDir,"/","10_Density_trajectory_splited_by_celltype.pdf"), height = heights_celltype,  width = widths_celltype,limitsize = FALSE)
+
+p3 <- ggplot(rep, aes(Pseudotime, fill = celltype)) +geom_density() +facet_wrap(~orig.ident) +theme_bw() +RotatedAxis() +theme(
+  strip.text = element_blank(),
+  strip.background = element_rect(color = "white", fill = "white"),
+  panel.grid = element_blank()) +scale_fill_manual(values = MYCOLOR)
+p3
+ggsave(p3 ,file =paste0(outputDir,"/","11_Density_trajectory_splited_by_orig.pdf"), height = heights_orig,  width = widths_orig,limitsize = FALSE)
+
+### Sample
+p4 <-plot_cell_trajectory(gbm_cds, color_by = 'orig.ident') +scale_color_manual(values=MYCOLOR)+ggtitle('celltype') + theme(plot.title = element_text(hjust = 0.5),legend.position = "right")
+p4
+ggsave(p4 ,file =paste0(outputDir,"/","12_Sample_trajectory.pdf"), width = 8, height = 6,limitsize = FALSE)
+
+p4 <-plot_cell_trajectory(gbm_cds, color_by = 'orig.ident', cell_size = 0.5,cell_link_size = 0.5) +facet_wrap(~celltype, nrow = nrows_celltype, scales = "free")+scale_color_manual(values=MYCOLOR) + theme(plot.title = element_text(hjust = 0.5),legend.position = "right")
+p4
+ggsave(p4 ,file =paste0(outputDir,"/","12_Sample_trajectory_splited_by_orig.pdf"), width = widths_celltype, height = heights_celltype,limitsize = FALSE)
+
+p4 <- ggplot(rep, aes(Pseudotime, fill = orig.ident)) +geom_density() +theme_bw() +RotatedAxis() +theme(
+  strip.text = element_blank(),
+  strip.background = element_rect(color = "white", fill = "white"),
+  panel.grid = element_blank()) +scale_fill_manual(values = MYCOLOR2)
+p4
+ggsave(p4 ,file =paste0(outputDir,"/","13_Density_trajectory_splited_by_orig.pdf"), height = 8, width = 6,limitsize = FALSE)
+
+p4 <- ggplot(rep, aes(Pseudotime, fill = orig.ident)) +geom_density() +facet_wrap(~celltype) +theme_bw() +RotatedAxis() +theme(
+  strip.text = element_blank(),
+  strip.background = element_rect(color = "white", fill = "white"),
+  panel.grid = element_blank()) +scale_fill_manual(values = MYCOLOR2)
+p4
+ggsave(p4 ,file =paste0(outputDir,"/","14_Density_trajectory_splited_by_orig.pdf"), height = heights_celltype, width = widths_celltype,limitsize = FALSE)
+
+### 
+## ----------------------------------------------------逆时间轴轨迹构建和在逆时间内排列细胞-----------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
