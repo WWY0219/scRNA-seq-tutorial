@@ -289,8 +289,9 @@ save(s.cells,file="Celltype_state7.rad")
 write.csv(pData(cds),"pseudotime.csv")
 save(cds,file="cds.rda")
 
-# -----------------------------------------指定基因的可视化-----------------------------------------------
-## 选择前4个top基因并将其对象取出
+
+# ============================================================= 指定基因的可视化 =============================================================================
+### 选择前4个top基因并将其对象取出
 keygenes <- head(ordergene,4)
 cds_subset <- cds[keygenes,]
 ## 可视化
@@ -298,8 +299,61 @@ p1 <- plot_genes_in_pseudotime(cds_subset,color_by="State")
 p2 <- plot_genes_in_pseudotime(cds_subset,color_by="celltype")
 p3 <- plot_genes_in_pseudotime(cds_subset,color_by="Pseudotime")
 
+## 指定基因
+s.genes <- c("CD4","CD8",...)
+p1 <- plot_genes_jitter(cds[s.genes,],grouping = "State", color_by ="State")
+p2 <- plot_genes_violin(cds[s.genes,],grouping = "State", color_by ="State")
+p3 <- plot_genes_in_pseudotime(cds[s.genes,], color_by ="State")
+
+## 逆时序展示单个基因表达量
+colnames(pData(cds))
+pData(cds)$CCL5 = log2(exprs(cds)['CCL5',]+1)
+p1 <- plot_cell_trajectory(cds, color_by = "CCL5") = scale_color_gsea()
+p1
 
 
+# ============================================================= 逆时差异基因 =============================================================================
+## disp_table <- dispersionTable(cds)
+## ordering_genes <- subset(disp_table,mean_expression >= 0.1 &dispersion_empirical >= 1 * dispersion_fit)
+cds_expressed_genes <- rownames(fData(cds))
+diff_test_res <- differentialGeneTest(cds[cds_expressed_genes,],cores = 1，
+                                      fullModelFormulaStr = "~sm.ns(Pseudotime)")
+
+sig_gene_names <- diff_test_res %>% 
+                  dplyr::filter(qval < 0.01) %>% 
+                  arrange(qval) %>% row.names()  
+diff_test_res1 <- diff_test_res %>% rownames_to_column("gene")
+
+write.table(diff_test_res1, file = paste0(outputDir,'/','diff_test_ordering_genes.xls'), row.names = F,col.names = T,quote = F,sep="\t")
+#write.table(ordering_genes,file=paste0(outputDir,'/',"ordering_genes.csv"),row.names = F,col.names = T,quote = F,sep="\t")
+write.table(sig_gene_names, file = paste0(outputDir,'/','ordering_genes_sig_gene_names.all.xls'), row.names = F,col.names = F,quote = F)
+
+##-----------------------------------------筛选top50 展示热图------------------------------------
+tryCatch({
+  p <-plot_pseudotime_heatmap(cds[sig_gene_names[1:50],],
+                              num_clusters = 3,
+                              cores = 4,
+                              show_rownames = T,
+                              return_heatmap= T)
+  ggsave(p,file=paste0(outputDir,'/',"pseudotime_dependent_gene_heatmap_top50.pdf"),width = 9, height = 5,limitsize = FALSE)
+  # 拆分拟时序分析轴上每个cluster的基因（拆分top50个基因）
+  clusters <- cutree(p$tree_row, k = 3)
+  clustering <- as.data.frame(clusters) %>% rownames_to_column(var = "gene")
+  colnames(clustering) <- c("gene","cluster")
+  write.table(clustering,file=paste0(outputDir,'/',"pseudotime_dependent_gene_heatmap_top50_gene_by_cluster.xls"),sep="\t",quote = F,col.names = T,row.names = F)
+}, error = function(e) {
+  print("Fewer than 50 significant genes")
+})
+
+## ----------------------------------------手动提取基因单独分析-------------------------------------
+p$tree_row
+clusters <- cutree(p$tree_row, k = 2)
+clustering <- data.frame(clusters)
+clustering[,1] <- as.character(clustering[,1])
+colnames(clustering) <- "Gene_Clusters"
+table(clustering)
+
+write.csv(clustering, "Time_clustering_all.csv",row.names=F)
 
 
 
