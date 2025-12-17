@@ -317,7 +317,7 @@ p1
 ## disp_table <- dispersionTable(cds)
 ## ordering_genes <- subset(disp_table,mean_expression >= 0.1 &dispersion_empirical >= 1 * dispersion_fit)
 cds_expressed_genes <- rownames(fData(cds))
-diff_test_res <- differentialGeneTest(cds[cds_expressed_genes,],cores = 1，
+diff_test_res <- differentialGeneTest(cds[cds_expressed_genes,],cores = 1,
                                       fullModelFormulaStr = "~sm.ns(Pseudotime)")
 
 sig_gene_names <- diff_test_res %>% 
