@@ -507,8 +507,53 @@ plot_genes_branched_pseudotime(cds[genes,],
                                color_by = "State",
                                ncol = 1)
 
-
-
+# ============================================================= Branch分析及热图可视化 =============================================================================
+branch<-length(gbm_cds@auxOrderingData[[gbm_cds@dim_reduce_type]]$branch_points)
+if (branch != 0){ 
+  for(i in 1:branch){
+    print(paste0("Find branch ",i," related genes  need  some  time ",lubridate::now()))
+    BEAM_res <-BEAM(gbm_cds, branch_point = i, cores = 4,progenitor_method = 'duplicate')
+    BEAM_res <- BEAM_res[order(BEAM_res$qval),]
+    BEAM_res <- BEAM_res[,c("gene_short_name", "pval", "qval")]
+    heatmap_gene<-row.names(BEAM_res)[order(BEAM_res$qval)][1:50]
+    heat<-plot_genes_branched_heatmap(gbm_cds[heatmap_gene,],
+                                      branch_point = i,
+                                      num_clusters = 2,
+                                      cores = 4,
+                                      use_gene_short_name = T,
+                                      show_rownames = T,
+                                      return_heatmap=T)
+    png(paste0(outputDir,'/',"branch",i,"_pseudo_heatmap.png"),w=8,h=8,res=300,units="in")
+    grid::grid.newpage()
+    grid::grid.draw(heat$ph_res$gtable)
+    dev.off()
+    pdf(paste0(outputDir,'/',"branch",i,"_pseudo_heatmap.pdf"))
+    grid::grid.newpage()
+    grid::grid.draw(heat$ph_res$gtable)
+    dev.off()
+    write_csv(BEAM_res,paste0(outputDir,'/',"branch",i,"_pseudo_related_gene.xls"))
+    ## 筛选每个branch 分支上变化显著的3个基因展示：
+    branched_genes <- row.names(BEAM_res)[order(BEAM_res$qval)][1:3]   #top3
+    p <-plot_genes_branched_pseudotime(gbm_cds[branched_genes,],
+                                       branch_point = i,
+                                       color_by = 'celltype',
+                                       ncol = 1) +
+      theme(plot.title = element_text(hjust = 0.5),legend.position = "right")
+    ggsave(p,file=paste0(outputDir,'/',"branch",i,"_genes_branched_pseudotime_celltype",".pdf",sep=""),width = 9, height = 8,limitsize = FALSE)
+    
+    p <-plot_genes_branched_pseudotime(gbm_cds[branched_genes,],
+                                       branch_point = i,
+                                       color_by = 'orig.ident',
+                                       ncol = 1) +
+      theme(plot.title = element_text(hjust = 0.5),legend.position = "right")
+    p
+    ggsave(p,file=paste0(outputDir,'/',"branch",i,"_genes_branched_pseudotime_orig",".pdf",sep=""),width = 9, height = 8,limitsize = FALSE)
+    
+  }
+}else {
+  print("No branch points, no BEAM execution")
+  branch = ""
+}
 
 
 
