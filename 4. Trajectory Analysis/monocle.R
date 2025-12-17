@@ -269,8 +269,28 @@ p4 <- ggplot(rep, aes(Pseudotime, fill = orig.ident)) +geom_density() +facet_wra
 p4
 ggsave(p4 ,file =paste0(outputDir,"/","14_Density_trajectory_splited_by_orig.pdf"), height = heights_celltype, width = widths_celltype,limitsize = FALSE)
 
-### 
-## ----------------------------------------------------逆时间轴轨迹构建和在逆时间内排列细胞-----------------------------------------------
+### 树形图
+p2 <- plot_complex_cell_trajectory(cds, x = 1, y = 2,
+                                   color_by = "celltype") +
+  scale_color_manual(values = color) +
+theme(legend.title = element_blank())
+p2
+
+### 沿时间轴的细胞密度图
+df <- pData(cds) # 取出cds对象中cds@phenoData@data的内容
+View(df)
+ggplot(df, aes(Pseudotime, colour = celltype, fill = celltype))+
+geom_density(bw=0.5, size=1,alpha = 0.5) +theme_classic2()
+
+###！！！提取感兴趣的细胞！！！
+pdata <- Biobase::pData(cds)
+s.cells <- subset(pdata,State == "7") %>% rownames()
+save(s.cells,file="Celltype_state7.rad")
+write.csv(pData(cds),"pseudotime.csv")
+save(cds,file="cds.rda")
+
+# -----------------------------------------指定基因的可视化-----------------------------------------------
+
 
 
 
