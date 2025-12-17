@@ -69,9 +69,18 @@ colsp <-c('#FED439FF','#709AE1FF','#8A9197FF','#D2AF81FF','#FD7446FF','#D5E4A2FF
 ## 提取表达数据
 count_matrix <- GetAssayData(smc, assay = "RNA", layer = "counts")
 count_count<- as(as.matrix(count_matrix),'spareMatrix')
+## 提取表型数据
+pd <- new('AnnotatedDataFrame', data = seurat_obj@meta.data)
+## 提取基因信息
+fData <- data.frame(gene_short_name = row.names(seurat_obj), row.names = row.names(seurat_obj))
+fd <- new('AnnotatedDataFrame', data = fData)
 
-
-
+## 构建CDS文件
+cds <- newCellDataSet(count_matrix,
+                      phenoData = pd,
+                      featureData = fd,
+                      lowerDetectionLimit = 0.5,
+                      expressionFamily = negbinomial.size())
 
 
 
