@@ -68,8 +68,8 @@ colsp <-c('#FED439FF','#709AE1FF','#8A9197FF','#D2AF81FF','#FD7446FF','#D5E4A2FF
 # ============================================================= Prepare InputData =============================================================================
 ## 提取表达数据
 count_matrix <- GetAssayData(smc, assay = "RNA", layer = "counts")
-ccount
-#将所有的metedata 添加到phenoData中
+count_count<- as(as.matrix(count_matrix),'spareMatrix')
+## 提取表型数据
 pd <- new('AnnotatedDataFrame', data = smc@meta.data)
 fData <- data.frame(gene_short_name = row.names(smc), row.names = row.names(smc))
 fd <- new('AnnotatedDataFrame', data = fData)
