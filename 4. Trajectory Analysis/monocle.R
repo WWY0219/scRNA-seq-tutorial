@@ -19,6 +19,7 @@ library(monocle)
 library(ggpubr)
 library(argparse)
 library(tidyverse)
+library(igraph)   # Version-2.0.3  !!!
 set.seed(1234)
 # 查看工作路径下的文件
 list.files()
@@ -384,7 +385,7 @@ plot_pseudotime_heatmap(cds[sig_gene_names,],
 
 
 # ============================================================= 单细胞轨迹的分支分析 =============================================================================
-## ------------------BEAM进行统计分析------------------------
+## ------------------------------------------BEAM进行统计分析----------------------------------------------------
 ### dpFeature
 expressed_genes <- row.names(fData(cds))
 diff <- differentialGeneTest(cds[expressed_genes,],
@@ -404,6 +405,38 @@ cds <- setOrderingFilter(cds, ordergene)   # 将基因列表嵌入cds对象
 ## 通过table(cds@featureData@data[["use_for_ordering"]])查看
 plot_ordering_genes(cds)
 # ordergene <- row.names(deg)[order(deg$qval)][1:400] #选择用于排序的基因数目一般在2000 
+BEAM_res <- BEAM(cds[ordergene,], branch_point = 1, cores = 2)
+BEAM_res <- BEAM_res[order(BEAM_res$qval),]
+BEAM_res <- BEAM_res[,c("gene_short_name","pval","qval")]
+head(BEAM_res)
+write.csv(BEAM_res,"BEAM_res.csv", row.names = F)
+plot_genes_branched_heatmap(cds[row.names(subset(BEAM_res,qval < 1e-4)),],
+                            branch_point = 1, #绘制的是哪个分支
+                            num_clusters = 4,
+                            cores = 1,
+                            use_gene_short_name = T,
+                            show_rownames = T)
+### 该热图显示的是同一时间点两个谱系的变化，热图的列是伪时间的点，行是基因。这张图最上面的条条日澳，灰色的代表分叉前，红色代表左边cellfate
+### 热图基因按照等级聚类
+
+### 选前100个基因可视化
+BBEAM_genes <- top_n(BEAM_res, n=100,desc(qval)) %>% pull(gene_short_name) %>% as.character()
+p <- plot_genes_branched_heatmap(cds[BEAM_genes,], 
+                                 branch_point = 1,
+                                 num_clusters = 3,
+                                 show_rownames = T,
+                                 return_heatmap = T)
+hp.genes <- p$ph_res$tree_row$labels[p$ph_res$tree_row$order]
+BEAM_sig <- BEAM_res[hp.genes, c("gene_short_name","pval","qval")]
+write.csv(BEAM_sig, "BEAM_sig.csv", row.names = F)
+head(BEAM_sig)
+genes <- row.names(susbet(fData(cds),
+                          gene_short_name %in% c("A","B",...)))
+plot_genes_branched_pseudotime(cds[genes,],
+                               branch_point = 1,
+                               color_by = "State",
+                               ncol = 1)
+
 
 
 
