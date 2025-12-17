@@ -6,10 +6,10 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=64000
-outdir = /data/person/g5/wangwy/
+outdir = /data/person/g5/wangwy/{output_file}
 cd outdir 
 cellranger count \
---id run_pbmc_1k_v3_fastqs \
+--id output_file \
 --create-bam true \
 --transcriptome refdata-gex-GRCh38-2024-A/ \
 --fastqs pbmc_1k_v3_fastqs/ \
