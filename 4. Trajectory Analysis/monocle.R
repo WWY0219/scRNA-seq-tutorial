@@ -69,18 +69,15 @@ colsp <-c('#FED439FF','#709AE1FF','#8A9197FF','#D2AF81FF','#FD7446FF','#D5E4A2FF
 ## 提取表达数据
 count_matrix <- GetAssayData(smc, assay = "RNA", layer = "counts")
 count_count<- as(as.matrix(count_matrix),'spareMatrix')
-## 提取表型数据
-pd <- new('AnnotatedDataFrame', data = smc@meta.data)
-fData <- data.frame(gene_short_name = row.names(smc), row.names = row.names(smc))
-fd <- new('AnnotatedDataFrame', data = fData)
-##expressionFamily: 数据为TPM/FPKM时设置为tobit(Lower = 0.1)，数据为count时设置为negbinomial.size())
-###将FPKM/TPM数据转换为UMI数据（read count）rpc_matrix <- relative2abs(cd)
+## 提取表型seurat_objpd <- new('AnnotatedDataFrame'## 提取表型seuratpd <- new('AnnotatedDataFrame'## 提取表型se'u'ra'tpd <- new('AnnotatedDataFrame'## 提取表型se'u'rapd <- new('AnnotatedDataFrame'## 提取表型se'u'rpd <- new('AnnotatedDataFrame'## 提取表型pd <- new('AnnotatedDataFrame'a.grrme(genesnhort_name = mow.naces(soc), roPed据（read count）rpc_ma
 
-gbm_cds <- newCellDataSet(as(as.matrix(count_matrix),'sparseMatrix'),
-                          phenoData = pd,
-                          featureData = fd,
-                          lowerDetectionLimit = 0.5,
-                          expressionFamily = negbinomial.size())
+ix <- relative2abs(cd)
+
+gbm_cds <- newCellDataSet(as('s.matrix(cou't_
+                                         
+                                           
+                                                  lo
+                                                  expressionFami
 
 
 
