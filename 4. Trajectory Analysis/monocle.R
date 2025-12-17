@@ -384,9 +384,26 @@ plot_pseudotime_heatmap(cds[sig_gene_names,],
 
 
 # ============================================================= 单细胞轨迹的分支分析 =============================================================================
-## BEAM进行统计分析
+## ------------------BEAM进行统计分析------------------------
+### dpFeature
+expressed_genes <- row.names(fData(cds))
+diff <- differentialGeneTest(cds[expressed_genes,],
+                             fullModelFormulaStr = "~celltype",  # 理论上可以为p_data的任意列名
+                             cores=1)
+head(diff)
 
+#### 差异表达基因作为轨迹构建的基因，差异基因的选择标准是qval<0.01, decreasing = F表示按数值增加排序
+deg <- subset(diff, qval< 0.01)
+deg <- deg[order(deg$qval, decreasing = F),]
+head(deg)
+write.table(deg, file="train.monocle.DEG.xls",col.names=T, row.names=F,sep="\t",quote=F)
 
+ordergene <- rownames(deg)
+cds <- setOrderingFilter(cds, ordergene)   # 将基因列表嵌入cds对象
+## 以上操作储存在cds@featureData@data[["use_for_ordering"]]
+## 通过table(cds@featureData@data[["use_for_ordering"]])查看
+plot_ordering_genes(cds)
+# ordergene <- row.names(deg)[order(deg$qval)][1:400] #选择用于排序的基因数目一般在2000 
 
 
 
