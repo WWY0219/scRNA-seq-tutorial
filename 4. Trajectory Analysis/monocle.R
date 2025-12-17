@@ -22,6 +22,11 @@ library(tidyverse)
 set.seed(1234)
 # 查看工作路径下的文件
 list.files()
+outdir <- getwd()
+outputDir <- file.path(outdir,"monocle2")
+if (!dir.exists(paste0(outputDir))){
+  dir.create(paste0(outputDir))
+}
 
 # ============================================================ Load scData for TraceAnalysis ==================================================
 seurat_obj <- qread("seurat_obj.qs")
@@ -94,24 +99,24 @@ cds <- estimateDispersions(cds)
 ## ---------挑选细胞间高度离散的基因 高度离散基因的筛选标准，可根据数据情况设置mean_expression的值------------
 
 ## Method-1(使用seurat选择的高变基因）
+express_genes <- VariableFeatures(seurat_obj)
+cds <- setOrderingFilter(cds,express_genes)
+plot_ordering_genes(cds)
 
+## Method-2(使用clusters差异表达基因）
+deg.cluster <- FindAllMarkers(seurat_obj)
+express_genes <- subset(deg.cluster, p_val_adj<0.05)$gene
+cds <- setOrderingFilter(cds,express_genes)
+plot_ordering_genes(cds)
 
-
-
-
-
-
-
-
-
-
-disp_table <- dispersionTable(gbm_cds)
+## Method-3（使用monocle选择的高变基因）
+disp_table <- dispersionTable(cds)
 ordering_genes_temp <- subset(disp_table, mean_expression >= 0.1  & dispersion_empirical >= 1 * dispersion_fit) 
 ordering_genes<-ordering_genes_temp$gene_id
-gbm_cds <- setOrderingFilter(gbm_cds, ordering_genes)
+cds <- setOrderingFilter(gbm_cds, ordering_genes)
 write.table(ordering_genes, file = paste0(outputDir,"/","dispersion.ordering_genes.xls"), row.names = T, quote = F,sep='\t',col.names=T)
 pdf(file = paste(outputDir,"ordering_genes.pdf",sep='/'), width = 9, height = 5)
-print(plot_ordering_genes(gbm_cds))
+print(plot_ordering_genes(cds))
 dev.off()
 
 
