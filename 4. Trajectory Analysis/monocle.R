@@ -355,11 +355,36 @@ table(clustering)
 
 write.csv(clustering, "Time_clustering_all.csv",row.names=F)
 
+### 逆时差异基因热图绘制
+Time_genes <- top_n(diff_test_res, n =100, desc(qval) )%>% 
+                    pull(gene_short_name) %>% 
+                    as.character()
+p = plot_pseudotime_heatmap(cds[Time_genes,], 
+                            num_clusters = 4, 
+                            show_rownames = T,
+                            return_heatmap =T)
+
+### 显著差异基因按热图结果排序
+hp.genes <- p$tree_row$labels[p$tree_row$order]
+Time_diff_sig <- diff_test_res[hp.genes, c("gene_short_name","pval","qval")]
+write.csv(Time_diff_sig,"Time_diff_sig.csv",row.names = F)
+
+### 手动选择基因绘制热图
+marker_genes <- row.names(subset(fData(cds),
+                                 gene_short_short_name %in% c("A","B",...)))
+diff_test_res <- differentialGeneTest(cds[cds_expressed_genes,],cores = 1，
+                                      fullModelFormulaStr = "~sm.ns(Pseudotime)")
+sig_gene_names <- row.names(subset(diff_test_res, qval <0.1))
+plot_pseudotime_heatmap(cds[sig_gene_names,],
+                              num_clusters = 3,
+                              cores = 4,
+                              show_rownames = T,
+                              return_heatmap= T)
 
 
 
-
-
+# ============================================================= 单细胞轨迹的分支分析 =============================================================================
+## BEAM进行统计分析
 
 
 
