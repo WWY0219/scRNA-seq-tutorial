@@ -65,8 +65,21 @@ colsp <-c('#FED439FF','#709AE1FF','#8A9197FF','#D2AF81FF','#FD7446FF','#D5E4A2FF
           '#F8D568','#00AD43','#89CFF0','#BA160C','#FF91AF','#A6A6A6','#006DB0','#C154C1','#D99A6C','#96C8A2','#FBEC5D')
 
 
+# ============================================================= Prepare InputData =============================================================================
+## 提取表达数据
+count_matrix <- GetAssayData(smc, assay = "RNA", layer = "counts")
+#将所有的metedata 添加到phenoData中
+pd <- new('AnnotatedDataFrame', data = smc@meta.data)
+fData <- data.frame(gene_short_name = row.names(smc), row.names = row.names(smc))
+fd <- new('AnnotatedDataFrame', data = fData)
+##expressionFamily: 数据为TPM/FPKM时设置为tobit(Lower = 0.1)，数据为count时设置为negbinomial.size())
+###将FPKM/TPM数据转换为UMI数据（read count）rpc_matrix <- relative2abs(cd)
 
-
+gbm_cds <- newCellDataSet(as(as.matrix(count_matrix),'sparseMatrix'),
+                          phenoData = pd,
+                          featureData = fd,
+                          lowerDetectionLimit = 0.5,
+                          expressionFamily = negbinomial.size())
 
 
 
