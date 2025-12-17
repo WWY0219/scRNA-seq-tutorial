@@ -382,6 +382,81 @@ plot_pseudotime_heatmap(cds[sig_gene_names,],
                               show_rownames = T,
                               return_heatmap= T)
 
+# ============================================================= 差异表达基因做GO分析 =============================================================================
+# TYPE的可选类型：SYMBOL, ENSEMBL, ENTREZID
+# OrgDb的可选类型：'org.Dr.eg.db','org.Mm.eg.db','org.Hs.eg.db'
+library(org.Hs.eg.db) # 确保加载了org.Hs.eg.db包
+library(enrichplot)   # 确保加载了enrichplot包，用于可视化
+library(clusterProfiler)
+
+dir.create('GO')
+# 初始化或清空错误信息文件
+#这行代码的作用是打开（或创建）一个名为 "error_messages.txt" 的文件，以追加模式进行写入。
+#这意味着任何写入这个文件的数据都会被添加到文件的末尾，而不会覆盖原有内容。
+#如果 "error_messages.txt" 文件不存在，这行代码将会创建这个文件。
+
+error_file <- file("GO/error_messages.txt", "a")
+writeLines(c("Error log for GO enrichment analysis:", 
+             "------------------------------------------------",
+             'starting time at:', format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+             "------------------------------------------------"), 
+           error_file, useBytes = FALSE)
+
+for (i in unique(clustering$cluster)) {
+  # 尝试转换基因ID
+  gene <- tryCatch({
+    bitr(geneID = clustering$gene[clustering$cluster == i],
+         fromType = 'SYMBOL',
+         toType = 'ENTREZID',
+         OrgDb = 'org.Hs.eg.db')}, 
+    error = function(e) {
+      message_text <- paste("Error in gene ID conversion for :", i, ": ", e$message)
+      writeLines(message_text, error_file, useBytes = FALSE)
+      return(NULL)})
+  
+  # 如果基因ID转换失败，跳过当前循环的剩余部分
+  if (is.null(gene)) {
+    next  }
+  
+  # 进行GO富集分析
+  ego <- tryCatch({
+    enrichGO(gene = gene$ENTREZID,
+             OrgDb = 'org.Hs.eg.db',
+             ont = "BP",
+             pvalueCutoff = 0.05,
+             qvalueCutoff = 1,
+             readable = TRUE)
+  }, error = function(e) {
+    message_text <- paste("Error in GO enrichment analysis for :", i, ": ", e$message)
+    writeLines(message_text, error_file, useBytes = FALSE)
+    return(NULL)})
+  
+  # 检查是否富集出任何通路
+  # 如果没有富集出任何通路，跳过画图代码
+  
+  if (is.null(ego) || nrow(summary(ego)) == 0) {
+    message_text <- paste("No enriched GO terms found for :", i)
+    writeLines(message_text, error_file, useBytes = FALSE)
+    next}
+  
+  # 保存富集分析结果
+  file_ego <- paste0("GO/",'Cluster_',i, "_Upregulated_GO_terms.csv", sep = "")
+  write.csv(summary(ego), file_ego)
+  
+  # 绘制图形并设置标题
+  file_name <- paste0("GO/Barplot_GO_terms_enriched_in_Cluster_", i, ".pdf")
+  p <- barplot(ego, title = paste0("GO terms enriched in ", i))
+  ggsave(file_name, plot = p, width = 8, height = 6)
+  
+  # 由于dotplot函数的使用可能有误，这里假设你使用的是 enrichplot 包的 dotplot 函数
+  # 如果不是，请根据实际使用的包和函数进行调整
+  file_name <- paste0("GO/Dotplot_GO_terms_enriched_in_Cluster_", i, ".pdf")
+  p<- dotplot(ego, x = 0, title = paste0("GO terms enriched in cluster ", i, sep = ""))
+  ggsave(file_name, plot = p,width = 3.83, height = 5.00)
+  }
+
+close(error_file)
+
 
 
 # ============================================================= 单细胞轨迹的分支分析 =============================================================================
