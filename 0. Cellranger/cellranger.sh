@@ -6,8 +6,8 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=64000
-
-
+outdir = /data/person/g5/wangwy/
+cd outdir 
 cellranger count \
 --id run_pbmc_1k_v3_fastqs \
 --create-bam true \
