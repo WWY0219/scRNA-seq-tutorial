@@ -69,15 +69,7 @@ colsp <-c('#FED439FF','#709AE1FF','#8A9197FF','#D2AF81FF','#FD7446FF','#D5E4A2FF
 ## 提取表达数据
 count_matrix <- GetAssayData(smc, assay = "RNA", layer = "counts")
 count_count<- as(as.matrix(count_matrix),'spareMatrix')
-## 提取表型seurat_objpd <- new('AnnotatedDataFrame'## 提取表型seuratpd <- new('AnnotatedDataFrame'## 提取表型se'u'ra'tpd <- new('AnnotatedDataFrame'## 提取表型se'u'rapd <- new('AnnotatedDataFrame'## 提取表型se'u'rpd <- new('AnnotatedDataFrame'## 提取表型pd <- new('AnnotatedDataFrame'a.grrme(genesnhort_name = mow.naces(soc), roPed据（read count）rpc_ma
 
-ix <- relative2abs(cd)
-
-gbm_cds <- newCellDataSet(as('s.matrix(cou't_
-                                         
-                                           
-                                                  lo
-                                                  expressionFami
 
 
 
