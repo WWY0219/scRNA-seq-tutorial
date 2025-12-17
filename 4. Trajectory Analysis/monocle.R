@@ -290,12 +290,13 @@ write.csv(pData(cds),"pseudotime.csv")
 save(cds,file="cds.rda")
 
 # -----------------------------------------指定基因的可视化-----------------------------------------------
-
-
-
-
-
-
+## 选择前4个top基因并将其对象取出
+keygenes <- head(ordergene,4)
+cds_subset <- cds[keygenes,]
+## 可视化
+p1 <- plot_genes_in_pseudotime(cds_subset,color_by="State")
+p2 <- plot_genes_in_pseudotime(cds_subset,color_by="celltype")
+p3 <- plot_genes_in_pseudotime(cds_subset,color_by="Pseudotime")
 
 
 
