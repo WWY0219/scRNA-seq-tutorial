@@ -508,15 +508,15 @@ plot_genes_branched_pseudotime(cds[genes,],
                                ncol = 1)
 
 # ============================================================= Branch分析及热图可视化 =============================================================================
-branch<-length(gbm_cds@auxOrderingData[[gbm_cds@dim_reduce_type]]$branch_points)
+branch<-length(cds@auxOrderingData[[cds@dim_reduce_type]]$branch_points)
 if (branch != 0){ 
   for(i in 1:branch){
     print(paste0("Find branch ",i," related genes  need  some  time ",lubridate::now()))
-    BEAM_res <-BEAM(gbm_cds, branch_point = i, cores = 4,progenitor_method = 'duplicate')
+    BEAM_res <-BEAM(cds, branch_point = i, cores = 4,progenitor_method = 'duplicate')
     BEAM_res <- BEAM_res[order(BEAM_res$qval),]
     BEAM_res <- BEAM_res[,c("gene_short_name", "pval", "qval")]
     heatmap_gene<-row.names(BEAM_res)[order(BEAM_res$qval)][1:50]
-    heat<-plot_genes_branched_heatmap(gbm_cds[heatmap_gene,],
+    heat<-plot_genes_branched_heatmap(cds[heatmap_gene,],
                                       branch_point = i,
                                       num_clusters = 2,
                                       cores = 4,
