@@ -309,7 +309,7 @@ p3 <- plot_genes_in_pseudotime(cds[s.genes,], color_by ="State")
 ## 逆时序展示单个基因表达量
 colnames(pData(cds))
 pData(cds)$CCL5 = log2(exprs(cds)['CCL5',]+1)
-p1 <- plot_cell_trajectory(cds, color_by = "CCL5") = scale_color_gsea()
+p1 <- plot_cell_trajectory(cds, color_by = "CCL5") + scale_color_gsea()
 p1
 
 
