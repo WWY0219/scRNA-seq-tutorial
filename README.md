@@ -9,9 +9,8 @@ Seurat V5
 ### 1. Quality Control
 ### 2. Data integration and FindCluster
 ### 3. Cell Annotation & Subtype Annotation
-### 4. Infercnv Analysis
-### 5. Cellchat Analysis
-### 6. Cytotrace and Monocle Analysis
-### CytoTRCAE2 
-### Monocle2 & Monocle3
-### slingplot
+### 4. Trajectory Analysis
+### 5. CellChat Analysis
+### 6. scData Expression Analysis
+### 7. scTF Analysis
+
