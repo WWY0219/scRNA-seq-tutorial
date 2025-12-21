@@ -4,8 +4,6 @@ The relevant codes used by WWY for analyzing **scRNA-seq**. Please be careful!!!
 R 4.3.2<br>
 Seurat V5
 > Conda::R432
-## Seurat Object
-![Seurat_obj](./Images/seurat_object.png)
 ## scRNA-Tutorial
 ### 0. Cellranger
 ### 1. Quality Control
