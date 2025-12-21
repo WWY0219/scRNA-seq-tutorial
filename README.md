@@ -2,6 +2,8 @@
 The relevant codes used by WWY for analyzing **scRNA-seq**. Please be careful!!!
 ## Environment
 R 4.3.2
+Seurat V5
+> Conda::R432
 ## scRNA-Tutorial
 ### 0. Cellranger
 ### 1. Quality Control
