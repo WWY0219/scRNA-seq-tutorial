@@ -1,4 +1,4 @@
-# ============================ 加载配置和工作环境 ============================
+# =================================================== 加载配置和工作环境 =====================================================
 Sys.setenv(LANGUAGE = "en")
 options(stringsAsFactors = FALSE)
 rm(list=ls());gc()
@@ -18,13 +18,13 @@ library(clustree)
 set.seed(1234)
 
 
-# ===============================================Load scData after QC-tutorial===================================================
+# ===============================================Load scData after QC-tutorial==============================================
 seurat_obj <- readRDS("../03.Output/seurat_obj_merge_qc.rds")
 seurat_obj[["RNA"]]=JoinLayers(seurat_obj[["RNA"]])
 print(seurat_obj)
 table(seurat_obj@meta.data$orig.ident)
 
-# ===============================================Load scData after QC-tutorial===============================================
+# ===============================================Load scData after QC-tutorial==============================================
 ## Use meadian of total UMI counts as a scaling factor to eliminate sequencing differences between cells
 seurat_obj <- NormalizeData(seurat_obj, normalization.method ="LogNormalize", 
                             scale.factor = median(seurat_obj@meta.data$nCount_RNA))
