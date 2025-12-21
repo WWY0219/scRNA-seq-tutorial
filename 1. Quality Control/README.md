@@ -5,7 +5,7 @@
 ## Environment
 > Conda::R432<br>
 ## Seurat Object
-![Seurat_obj](./Images/seurat_object.png)
+![Seurat_obj](../Images/seurat_object.png)
 ## Filenames
 In this part, I will process quality control for my scRNA-seq data.<br>
 First, we need to clarify the file storage structure.
