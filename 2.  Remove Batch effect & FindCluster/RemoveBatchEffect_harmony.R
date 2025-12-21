@@ -58,7 +58,7 @@ ElbowPlot(seurat_obj, reduction = "harmony", ndims = 50) +
   ggtitle("Elbow Plot for Harmony-Corrected Dimensions")
 ggsave(file.path(out_dir, paste0(obj_name, "_Harmony_convergence.pdf")), width = 8, height = 6, dpi = 300)
 
-# ===============================================Find Best Resolution===============================================
+# =============================================================Find Best Resolution====================================================
 seurat_obj <- FindNeighbors(seurat_obj, reduction = "harmony", dims = 1:max_dim_harmony, verbose = FALSE)
 seurat_obj <- FindClusters(seurat_obj, 
                            resolution = c(seq(.1,1.6,.2)), verbose = FALSE)
