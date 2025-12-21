@@ -37,8 +37,8 @@ g2m.genes <- cc.genes.updated.2019$g2m.genes
 seurat_obj <- CellCycleScoring(seurat_obj, s.features = s.genes, g2m.features = g2m.genes) 
 
 ## Regress unlike variables
-seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent_ribo1",
-                                                        "percent_ribo2","percent_mt","percent_RBC"))
+seurat_obj <- ScaleData(seurat_obj, vars.to.regress = c("S.Score", "G2M.Score","percent.ribo1",
+                                                        "percent.ribo2","percent.mt","percent_RBC"))
 ## Run PCA with HVG
 seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
 ElbowPlot(seurat_obj,ndims = 50) 
