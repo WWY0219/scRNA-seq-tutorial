@@ -7,13 +7,13 @@ In this section, 我们将通过sc_qc.R脚本的方式对单一样本进行质�
 ## Description of files and folders
 In this part, I will process quality control for my scRNA-seq data.<br>
 First, we need to clarify the file storage structure.<br>
-**01.Rawdata**<br>
+### 01.Rawdata
 - `./01.QC/01.RawData/`: Storage rawdata after cellranger
-  - `./01.QC/01.RawData/Seurat_obj_1.h5`: h5 files of scRNA samples<br>
-**02.Code**<br>
+  - `./01.QC/01.RawData/Seurat_obj_1.h5`: h5 files of scRNA samples
+### 02.Code
 - `./01.QC/01.Code/`:code pf QC
   - `./01.QC/01.Code/QC.R`:code of QC
-**03.Output**<br>
+### 03.Output
 - `./01.QC/03.output/`
   - `./01.QC/03.output/Seurat_obj_1/`:qc的figure
   - `./01.QC/03.output/Seurat_obj_merge_qc.qs`
