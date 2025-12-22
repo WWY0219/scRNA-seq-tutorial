@@ -1,15 +1,22 @@
 # 1. Quality Control
 In this section, 我们将通过sc_qc.R脚本的方式对单一样本进行质控。
 
-
 ## Environment
 > Conda::R432<br>
+
 ## Description of files and folders
 In this part, I will process quality control for my scRNA-seq data.<br>
 First, we need to clarify the file storage structure.<br>
 **01.Rawdata**<br>
-- `01.RawData`
-  - `Seurat_obj_1.h5`
+- `./01.QC/01.RawData/`: Storage rawdata after cellranger
+  - `./01.QC/01.RawData/Seurat_obj_1.h5`: h5 files of scRNA samples
+**02.Code**
+- `./01.QC/01.Code/`:code pf QC
+  - `./01.QC/01.Code/QC.R`:code of QC
+**03.Output**
+- `./01.QC/03.output/`
+  - `./01.QC/03.output/Seurat_obj_1/`:qc的figure
+  - `./01.QC/03.output/Seurat_obj_merge_qc.qs`
 >./01.QC/<br>
 --01.Rawdata<br>
 -----Seurat_obj_1.h5<br>
@@ -21,7 +28,7 @@ First, we need to clarify the file storage structure.<br>
 -----../Seurat_obj_1/<br>
 -----../Seurat_obj_2/<br>
 -----../...<br>
------../seurat_obj_merge_qc.qs/<br>
+-----../seurat_obj_merge_qc.qs<br>
 
 ## Tutorial
 **01.Run sc_run.q**<br>
