@@ -1,15 +1,15 @@
 # 1. Quality Control
-In this section, 我们将通过sc_qc.R脚本的方式对单一样本进行
+In this section, 我们将通过sc_qc.R脚本的方式对单一样本进行质控。
 
 
 ## Environment
 > Conda::R432<br>
-## Seurat Object
-![Seurat_obj](../Images/seurat_object.png)
 ## Description of files and folders
 In this part, I will process quality control for my scRNA-seq data.<br>
 First, we need to clarify the file storage structure.<br>
 **01.Rawdata**<br>
+- `01.RawData`
+  - `Seurat_obj_1.h5`
 >./01.QC/<br>
 --01.Rawdata<br>
 -----Seurat_obj_1.h5<br>
@@ -37,3 +37,5 @@ Remove doublets from individual samples (inferior - quality doublets are elimina
 **Merge Files**<br>
 Save *`seurat_obj_merge`* as *`seurat_obj_merge_qc`* with format of .qs or .rds. <br>
 
+## Seurat Object
+![Seurat_obj](../Images/seurat_object.png)
