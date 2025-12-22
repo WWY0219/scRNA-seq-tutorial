@@ -29,7 +29,7 @@ Remove doublets from individual samples (inferior - quality doublets are elimina
 ### 03.Run sc_decontx.R
 使用<mark>***Decontx***</mark>去除环境RNA污染（可选）<br>
 
-### Merge Files
+### 04.Merge Files
 Save *`seurat_obj_merge`* as *`seurat_obj_merge_qc`* with format of .qs or .rds. <br>
 
 ## Seurat Object
