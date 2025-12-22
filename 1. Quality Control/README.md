@@ -17,18 +17,6 @@ First, we need to clarify the file storage structure.<br>
 - `./01.QC/03.output/`
   - `./01.QC/03.output/Seurat_obj_1/`:qc的figure
   - `./01.QC/03.output/Seurat_obj_merge_qc.qs`
->./01.QC/<br>
---01.Rawdata<br>
------Seurat_obj_1.h5<br>
------Seurat_obj_2.h5<br>
------...<br>
---02.Code<br>
------QC.R<br>
---03.Output<br>
------../Seurat_obj_1/<br>
------../Seurat_obj_2/<br>
------../...<br>
------../seurat_obj_merge_qc.qs<br>
 
 ## Tutorial
 **01.Run sc_run.q**<br>
