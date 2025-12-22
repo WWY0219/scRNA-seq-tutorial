@@ -1,14 +1,15 @@
 # 1. Quality Control
-
+In this section, 我们将通过sc_qc.R脚本的方式对单一样本进行
 
 
 ## Environment
 > Conda::R432<br>
 ## Seurat Object
 ![Seurat_obj](../Images/seurat_object.png)
-## Filenames
+## Description of files and folders
 In this part, I will process quality control for my scRNA-seq data.<br>
-First, we need to clarify the file storage structure.
+First, we need to clarify the file storage structure.<br>
+**01.Rawdata**<br>
 >./01.QC/<br>
 --01.Rawdata<br>
 -----Seurat_obj_1.h5<br>
@@ -22,16 +23,17 @@ First, we need to clarify the file storage structure.
 -----../...<br>
 -----../seurat_obj_merge_qc.qs/<br>
 
-## 01.Run sc_run.q
+## Tutorial
+**01.Run sc_run.q**<br>
 Perform separate QC for each individual sample, including the removal of Mit-related genes, RBC-related genes, and ribo-related genes. Name the sample (e.g., *`Seurat_obj_1`*) and name the output file *`seurat_obj_1_qc`*.<br>
 Perform QC and filtering based on the corresponding expression profile of each sample, and name the resulting object *`seurat_obj_1_filtered`*.<br>
 
-## 02.Run sc_doublefinder.R
+**02.Run sc_doublefinder.R**<br>
 Remove doublets from individual samples (inferior - quality doublets are eliminated using <mark>***Doublefinder***</mark>), and name the output file *`seurat_obj_1_db`*.
 
-## 03.Run sc_decontx.R
+**03.Run sc_decontx.R**<br>
 使用<mark>***Decontx***</mark>去除环境RNA污染（可选）<br>
 
-## Merge Files
+**Merge Files**<br>
 Save *`seurat_obj_merge`* as *`seurat_obj_merge_qc`* with format of .qs or .rds. <br>
 
