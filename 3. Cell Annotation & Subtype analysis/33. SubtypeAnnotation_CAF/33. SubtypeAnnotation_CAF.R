@@ -22,7 +22,7 @@ list.files()
 ## Loading Major-subtype
 seurat_obj <- qread("seurat_obj_annotation.qs")
 DimPlot(seurat_obj,reduction = "umap",group.by = "seurat_clusters",label = T,pt.size = 0.25)+NoLegend()
-seurat_obj <- subset(seurat_obj, subset=celltype_major=="T/NK")
+seurat_obj <- subset(seurat_obj, subset=celltype_major=="CAF")
 print(seurat_obj)
 
 # ============================================== Subcelltype RE-reduction ================================================
@@ -89,26 +89,10 @@ top20_marker_genes=markers%>% group_by(cluster)%>%top_n(n=20,wt = avg_log2FC)
 
 
 # ============================================================= MarkerGenes View =======================================================
-## Marker
+## CAF-Marker
 known_markers = list(
-  "T cell"      = c("CD3D","CD3G","CD3E","CD4","CD8A","CD8B"),
-  "CD8/CD4 Tn"  = c("TCF7","SELL","LEF1","CCR7"),
-  "CD4 Teff"    = c("CX3CR1","PRF1","TBX21","S1PR5","KLRG1","GNLY","CTSW","NKG7","GZMH"),
-  "CD4 Tcm"     = c("ANXA1","LMNA","GPR183","MYADM"),
-  "CD4 Tem"     = c("LTB","IL7R","INTS6","FOS","JUN","GADD45B"),
-  "CD4+ Tex-CXCL13" = c("CXCL13","PDCD1","TOX2","IL6ST","FKBP5","MAF","BCL6"),
-  "CD8+ Tem"    = c("GZMK","CCL4L2","HLA-DQA1","CCL4","CCL5","CD69"),
-  "CD8+ Tex-SPRY1" = c("SPRY1","NR4A3","ID2"),     # 去掉重复的 LMNA
-  "CD8+ Tex-XAF1"  = c("XAF1","HAVCR2","LAG3","GZMA","IKZF3"), # 去掉重复的 PRF1
-  "CD8+ Trm"    = c("ZNF683","HOPX"),
-  "NK"          = c("AREG","XCL1","KLRC1","NCAM1","FCGR3A","NCR3"),
-  "NKT"         = c("TYROBP","FGFBP2"),
-  "CD4+ Treg"   = c("FOXP3","IL2RA","CTLA4","TNFRSF4","PMAIP1","PI16"),
-  "CD8 Teff"    = c("EOMES"),   # 去掉重复的 CX3CR1, FGFBP2
-  "Gdt"         = c("TRDC","TRGV2","TRGV3","TRGV4","TRGV5"),
-  "Tprf-MKI67"  = c("MKI67","STMN1","TOP2A","HMGB2"),
-  "MAIT cells"  = c("SLC4A10","ZBTB16","KLRB1"),
-  "ILC"         = c("CSF2","IL1RL1")   
+  "myCAF"  = c(),
+  "iCAF"   = c()   
 )
 DotPlot(object = seurat_obj,
         features = known_markers,
