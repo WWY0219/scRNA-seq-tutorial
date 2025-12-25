@@ -36,7 +36,6 @@ dir.create("./CellChat/")
 > CellChat需要两个用户输入:一个是细胞的基因表达数据，另一个是用户分配的细胞标签。<br>
 > 对于基因表达数据矩阵，行为基因，列为细胞。<br>
 > CellChat需要数据归一化数据。如果是count数据，使用normalizeData进行归一化。<br>
-### Load scData for cellchat
 #### 输入需要分析的单细胞数据
 ```R
 seurat_obj <- qread("seurat_obj.qs")
@@ -83,23 +82,23 @@ dplyr::glimpse(CellChatDB$interaction)
 > use CellChatDB.mouse if running on mouse data<br>
 
 #### 选取需要的数据库
+* 除“非蛋白信号”外，使用所有CellChatDB数据进行细胞-细胞通信分析
 ```R
-# 使用CellChatDB的中特定的数据库进行细胞-细胞通信分析
-# 示例中使用了Secreted Signaling
-# CellChatDB.use <- subsetDB(CellChatDB, search = "Secreted Signaling", key = "annotation") 
-
-# Only uses the Secreted Signaling from CellChatDB v1
-#  CellChatDB.use <- subsetDB(CellChatDB, search = list(c("Secreted Signaling"), c("CellChatDB v1")), key = c("annotation", "version"))
-
-# 除“非蛋白信号”外，使用所有CellChatDB数据进行细胞-细胞通信分析
-CellChatDB.use <- subsetDB(CellChatDB)
-
-# 使用所有CellChatDB数据进行细胞-细胞通信分析
-# 研究者不建议以这种方式使用它，因为CellChatDB v2包含“非蛋白信号”(即代谢和突触信号)。
-# CellChatDB.use <- CellChatDB 
-
-# 在构建的cellchat中设定需要使用的数据库
-cellchat@DB <- CellChatDB.use
+CellChatDB.use <- subsetDB(CellChatDB) 
+cellchat@DB <- CellChatDB.use # 在构建的cellchat中设定需要使用的数据库
+```
+* 使用CellChatDB的中特定的数据库进行细胞-细胞通信分析
+```R
+CellChatDB.use <- subsetDB(CellChatDB, search = "Secreted Signaling", key = "annotation")
+```
+* Only uses the Secreted Signaling from CellChatDB v1
+```R
+CellChatDB.use <- subsetDB(CellChatDB, search = list(c("Secreted Signaling"), c("CellChatDB v1")), key = c("annotation", "version"))
+```
+* 使用所有CellChatDB数据进行细胞-细胞通信分析
+> 研究者不建议以这种方式使用它，因为CellChatDB v2包含“非蛋白信号”(即代谢和突触信号)。<br>
+```R
+CellChatDB.use <- CellChatDB 
 ```
 ### 预处理细胞-细胞通讯分析的表达数据
 ```R
