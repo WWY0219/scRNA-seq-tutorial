@@ -153,9 +153,22 @@ df.net <- subsetCommunication(cellchat, sources.use = c(1,2), targets.use = c(4,
 df.net <- subsetCommunication(cellchat, signaling = c("WNT", "TGFb"))
 ```
 ### 07. CellChat Visulization
+CellChat可以可视化聚合的蜂窝间通信网络。circle展示互作数目<br>
+* 计算聚合细胞-细胞通信网络
+```R
+cellchat <- aggregateNet(cellchat)
+```
+> 互作网络整合,可以设置soure和target，不设置就是默认全部<br>
 
-
-
+可视化
+```R
+groupSize <- as.numeric(table(cellchat@idents)) 
+par(mfrow = c(1,2), xpd=TRUE)
+netVisual_circle(cellchat@net$count, vertex.weight = groupSize,
+                 weight.scale = T, label.edge= F, title.name = "Number of interactions")
+netVisual_circle(cellchat@net$weight, vertex.weight = groupSize, 
+                 weight.scale = T, label.edge= F, title.name = "Interaction weights/strength")
+```
 
 
 
