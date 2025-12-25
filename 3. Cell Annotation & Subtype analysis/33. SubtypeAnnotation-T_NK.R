@@ -261,3 +261,19 @@ USOO$subtype[tnk_barcodes] <- subtype_df[tnk_barcodes, "tnk_subtype"]
 table(USOO$subtype, useNA = "always")
 
 qsave("../03.Output/seurat_obj+T_NK.qs")
+  
+# =================================== Subtype merge to Major =====================================
+smc_cell_ids <- colnames(smc_subobj)                     # SMC细胞ID
+smc_subtype <- as.character(smc_subobj$subcelltype)      # 转为字符，避免因子问题
+names(smc_subtype) <- smc_cell_ids                       # 命名向量：细胞ID对应subcelltype
+
+seurat_obj$subtype <- as.character(seurat_obj$celltype)  # 关键：转字符，避免因子限制
+
+
+# 3. 替换SMC细胞的subtype为精细亚群（精准匹配）
+valid_smc_ids <- intersect(names(smc_subtype), colnames(seurat_obj))
+seurat_obj$subtype[valid_smc_ids] <- smc_subtype[valid_smc_ids]
+seurat_obj$subtype <- as.factor(seurat_obj$subtype)
+
+# 4. 验证结果（解决NA问题）
+table(seurat_obj$subtype, useNA = "always")  # 查看是否有NA
