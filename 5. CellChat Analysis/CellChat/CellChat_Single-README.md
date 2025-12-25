@@ -356,22 +356,22 @@ gg2 <- netAnalysis_signalingRole_scatter(cellchat, signaling = c("CXCL"));gg2
 gg1 + gg2
 ```
 #### 识别对某些细胞群的输出或输入信号贡献最大的信号
-* 
+* 展示所有的signaling
 ```R
-# ht1 <- netAnalysis_signalingRole_heatmap(cellchat, pattern = "outgoing")
-# ht1
-# ht2 <- netAnalysis_signalingRole_heatmap(cellchat, pattern = "incoming")
-# ht2
-# ht1 + ht2
-# class(ht1)
-
-# 特定的signaling
+ht1 <- netAnalysis_signalingRole_heatmap(cellchat, pattern = "outgoing")
+ht1
+ht2 <- netAnalysis_signalingRole_heatmap(cellchat, pattern = "incoming")
+ht2
+ht1 + ht2
+class(ht1)
+```
+* 特定的signaling
+```R
 cellchat@netP$pathways
 htout <- netAnalysis_signalingRole_heatmap(cellchat, 
                                         pattern = "outgoing",
                                         signaling = c("ICAM","TGFb"))
 htout
-
 htcome <- netAnalysis_signalingRole_heatmap(cellchat, 
                                         pattern = "incoming",
                                         signaling = c("ICAM","TGFb"))
