@@ -1,17 +1,20 @@
 # CellChat
 Cellchat能够从scRNA-seq数据中定量推断和分析细胞间通讯网络，其预测细胞的主要信号的输入及输出，以及这些细胞和信号是如何通过网络分析和模式识别方法进行协调从而执行功能。Cellchat中配体-受体分析主要基于质量作用定律模型量化两个细胞群体之间的信号通讯概率，其中的质量作用定律模型是指形成复合物的速率（即信号强度）与配体和受体的浓度有关.<br>
-以下内容参考[知乎文章][https://zhuanlan.zhihu.com/p/717734779](https://zhuanlan.zhihu.com/p/554129661) <br>
-以下内容参考[知乎文章2](https://zhuanlan.zhihu.com/p/1894789522887250489)
 ## DESCRIPTION
-### Environment
-Conda::R432
-### Github
-Github: <https://github.com/jinworks/CellChat>
+### Version
+CellChat V2
+### Github Learning
+* Github :<https://github.com/jinworks/CellChat>
+* ZhiHu-1:<https://zhuanlan.zhihu.com/p/1894789522887250489>
+* Zhihu-2:<https://zhuanlan.zhihu.com/p/717734779>
 ## Usage
-### 加载库
+### 01. 加载包并准备环境
 ```R
-library(Seurat)
-library(dplyr)
+Sys.setenv(LANGUAGE = "en")
+options(stringsAsFactors = FALSE)
+rm(list=ls());gc()
+setwd("workspace")
+getwd()
 library(SeuratData)
 library(patchwork)
 library(ggplot2)
@@ -19,27 +22,87 @@ library(CellChat)
 library(ggalluvial)
 library(ComplexHeatmap)
 library(svglite)
-options(stringsAsFactors = FALSE)
-rm(list=ls()) 
-options(stringsAsFactors = F) 
-setwd("myworkspace")
+library(qs)
+library(CellChat)
+library(dplyr)
+library(Seurat)
+library(ggpubr)
+library(cowplot)
+library(ggplot2)
+library(ggpubr)
+library(harmony)
+library(patchwork)
+library(RColorBrewer)
+library(SCP)
+set.seed(1234)
+# 查看工作路径下的文件
+list.files()
+dir.create("./CellChat/
 ```
-### 加载每个数据集的cellChat对象，然后合并在一起
-> 需要在每个数据集中单独运行CellChat，然后将不同的CellChat对象合并在一起<br>
 
+### 02. 加载每个数据集的cellChat对象，然后合并在一起
+#### 需要在每个数据集中单独运行CellChat
+```R
+seurat_obj <- qread("seurat_obj.qs")
+ncol(seurat_obj)
+Idents(seurat_obj)
+DimPlot(seurat_obj, pt.size = 0.8,group.by = "celltype_major",label = T)
+table(seurat_obj@meta.data$celltype_major)
+
+# 自己分析的时候记得改名，这里是scRNA_left
+data.input <- GetAssayData(scRNA_left, slot = 'data') # normalized data matrix
+meta <- scRNA_left@meta.data[,c("orig.ident","celltype_major")]
+colnames(meta) <-  c("samples","labels")
+table(meta$labels)
+table(meta$labels)
+identical(rownames(meta),colnames(data.input))
+## 根据研究情况进行细胞排序
+celltype_order <- c(
+  "Tumor", "Fibroblast", "SMC", "T/NK", 
+  "LEC", "Monocyte", "Mastcell", "Neutrophil", 
+  "Endothelial","Epithelial")
+meta$labels <- factor(meta$labels ,levels = celltype_order)
+table(meta$labels)
+# 根据 meta$labels 的顺序进行排序
+ordered_indices <- order(meta$labels)
+# 对 meta 和 data.input 进行排序
+meta <- meta[ordered_indices, ]
+data.input <- data.input[, ordered_indices]
+identical(rownames(meta),colnames(data.input))
+
+# 构建cellchat
+cellchat <- createCellChat(object = data.input, meta = meta, group.by = "labels")
+CellChatDB <- CellChatDB.human  
+CellChatDB.use <- subsetDB(CellChatDB)
+cellchat@DB <- CellChatDB.use
+cellchat <- subsetData(cellchat) # This step is necessary even if using the whole databa
+future::plan("multisession", workers = 1) # do parallel
+cellchat <- identifyOverExpressedGenes(cellchat)
+cellchat <- identifyOverExpressedInteractions(cellchat)
+cellchat <- smoothData(cellchat, adj = PPI.human)
+cellchat <- computeCommunProb(cellchat, type = "triMean",raw.use = FALSE) 
+cellchat <- filterCommunication(cellchat, min.cells = 10)
+cellchat <- computeCommunProbPathway(cellchat)
+df.net_left <- subsetCommunication(cellchat)
+cellchat <- aggregateNet(cellchat)
+cellchat_left <- netAnalysis_computeCentrality(cellchat, 
+                                          slot.name = "netP")
+```
+#### 将不同的CellChat对象合并在一起
 ```R
 cellchat.NL <- readRDS("/Users/jinsuoqin/Documents/CellChat/tutorial/cellchat_humanSkin_NL.rds")
 cellchat.LS <- readRDS("/Users/jinsuoqin/Documents/CellChat/tutorial/cellchat_humanSkin_LS.rds")
 object.list <- list(NL = cellchat.NL, LS = cellchat.LS)
 cellchat <- mergeCellChat(object.list, add.names = names(object.list))
-#> Merge the following slots: 'data.signaling','net', 'netP','meta', 'idents', 'var.features' , 'DB', and 'LR'.
 cellchat
 ```
+> `#> Merge the following slots: 'data.signaling','net', 'netP','meta', 'idents', 'var.features' , 'DB', and 'LR'.`<br>
+
 ### Part Ⅰ：预测细胞间通讯的一般原理
 CellChat 从全局出发，预测细胞间通信的一般原理。在比较多种生物学条件下的细胞间通讯时，它可以回答以下生物学问题：<br>
-* 细胞间通讯是否增强；
-* 哪些细胞类型之间的相互作用发生了显着变化；
-* 主要来源和目标如何从一种情况变为另一种情况；
+* 细胞间通讯是否增强
+* 哪些细胞类型之间的相互作用发生了显着变化
+* 主要来源和目标如何从一种情况变为另一种情况
 #### 比较交互总数和交互强度
 ```R
 gg1 <- compareInteractions(cellchat, show.legend = F, group = c(1,2))
@@ -53,10 +116,13 @@ netVisual_diffInteraction(cellchat, weight.scale = T)
 netVisual_diffInteraction(cellchat, weight.scale = T, measure = "weight")
 ```
 ```R
+gg3 <- rankNet(cellchat, mode = "comparison", stacked = T, do.stat = TRUE)
+gg4 <- rankNet(cellchat, mode = "comparison", stacked = F, do.stat = TRUE)
+gg3 + gg4
+```
+```R
 gg1 <- netVisual_heatmap(cellchat)
-#> Do heatmap based on a merged object
 gg2 <- netVisual_heatmap(cellchat, measure = "weight")
-#> Do heatmap based on a merged object
 gg1 + gg2
 ```
 差异网络分析仅适用于成对数据集。如果有更多的数据集进行比较，我们可以直接显示每个数据集中任意两个细胞群之间的相互作用数量或相互作用强度。 为了更好地控制跨不同数据集的推断网络的节点大小和边缘权重，我们计算每个细胞组的最大细胞数和所有数据集的最大交互数（或交互权重）
