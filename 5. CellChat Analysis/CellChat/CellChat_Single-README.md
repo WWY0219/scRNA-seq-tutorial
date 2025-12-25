@@ -339,10 +339,62 @@ netAnalysis_signalingRole_network(cellchat,
 > Mediator：中介者，用于识别在信号传播路径中起中介作用的细胞群体。<br>
 > Influencer：影响者，用于识别在整个网络中对信息传播影响最大的细胞群体。 列（不同的细胞类型）：列表示具体的细胞类型。颜色深浅（Importance）：颜色的深浅表示每个细胞类型在特定角色中的重要性。颜色越深，表示该细胞类型在这个角色中的重要性越高（例如信号传递的强度或频率越大）；颜色越浅，表示该细胞类型在这个角色中的重要性较低。<br>
 
+####  在二维空间中可视化占优势的发送者(源)和接收者(目标)
+```R
+# 从所有信号通路对聚合细胞-细胞通信网络的信号作用分析
+gg1 <- netAnalysis_signalingRole_scatter(cellchat);gg1
+# 对特定细胞间通讯网络的信号作用分析
+gg2 <- netAnalysis_signalingRole_scatter(cellchat, signaling = c("CXCL"));gg2
+gg1 + gg2
+```
+#### 识别对某些细胞群的输出或输入信号贡献最大的信号
+```R
+# ht1 <- netAnalysis_signalingRole_heatmap(cellchat, pattern = "outgoing")
+# ht1
+# ht2 <- netAnalysis_signalingRole_heatmap(cellchat, pattern = "incoming")
+# ht2
+# ht1 + ht2
+# class(ht1)
 
+# 特定的signaling
+cellchat@netP$pathways
+htout <- netAnalysis_signalingRole_heatmap(cellchat, 
+                                        pattern = "outgoing",
+                                        signaling = c("ICAM","TGFb"))
+htout
 
+htcome <- netAnalysis_signalingRole_heatmap(cellchat, 
+                                        pattern = "incoming",
+                                        signaling = c("ICAM","TGFb"))
+htcome
+```
+#### 识别整体通信模式/以探索多种细胞类型和信号通路如何协调运作
+```R
+library(NMF)
+library(ggalluvial)
+selectK(cellchat, pattern = "outgoing")
 
+# 当输出模式的数量为5时，Cophenetic值和Silhouette值都开始突然下降。
+nPatterns = 5
+cellchat <- identifyCommunicationPatterns(cellchat, 
+                                          pattern = "outgoing", 
+                                          k = nPatterns)
+# river plot
+netAnalysis_river(cellchat, pattern = "outgoing")
+# dot plot
+netAnalysis_dot(cellchat, pattern = "outgoing")
+selectK(cellchat, pattern = "incoming")
 
+# 当输出模式的数量为6时，Cophenetic值和Silhouette值都开始突然下降。
+nPatterns = 6
+cellchat <- identifyCommunicationPatterns(cellchat, 
+                                          pattern = "incoming", 
+                                          k = nPatterns)
+# river plot
+netAnalysis_river(cellchat, pattern = "incoming")
+# dot plot
+netAnalysis_dot(cellchat, pattern = "incoming")
+```
 
 
 
