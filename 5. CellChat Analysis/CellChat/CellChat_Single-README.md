@@ -40,6 +40,9 @@ DimPlot(seurat_obj, pt.size = 0.8,group.by = "celltype_major",label = T)
 table(seurat_obj@meta.data$celltype_major)
 ```
 ### Prepare scData for cellchat
+> CellChat需要两个用户输入:一个是细胞的基因表达数据，另一个是用户分配的细胞标签。<br>
+> 对于基因表达数据矩阵，行为基因，列为细胞。<br>
+> CellChat需要数据归一化数据。如果是count数据，使用normalizeData进行归一化。<br>
 ```R
 data.input <- GetAssayData(seurat_obj, layer = 'data')           # normalized data matrix
 meta <- seurat_obj@meta.data[,c("orig.ident","celltype_major")]  # your cellType
