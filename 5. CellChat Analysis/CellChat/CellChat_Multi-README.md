@@ -1,7 +1,7 @@
 # CellChat
-Plink 是用于遗传学数据分析的开源工具软件，特别适用于大规模的基因组关联研究（Genome-Wide Association Studies, GWAS）和基因型数据分析。<br>
-其主要功能包括质量控制、关联测试、群体结构分析、基因组数据格式转换以及基因型数据的基本统计分析。<br>
+Cellchat能够从scRNA-seq数据中定量推断和分析细胞间通讯网络，其预测细胞的主要信号的输入及输出，以及这些细胞和信号是如何通过网络分析和模式识别方法进行协调从而执行功能。Cellchat中配体-受体分析主要基于质量作用定律模型量化两个细胞群体之间的信号通讯概率，其中的质量作用定律模型是指形成复合物的速率（即信号强度）与配体和受体的浓度有关.
 以下内容参考[知乎文章]([https://zhuanlan.zhihu.com/p/717734779](https://zhuanlan.zhihu.com/p/554129661))<br>
+以下内容参考[知乎文章2](https://zhuanlan.zhihu.com/p/1894789522887250489)
 ## DESCRIPTION
 ### Environment
 Conda::R432
