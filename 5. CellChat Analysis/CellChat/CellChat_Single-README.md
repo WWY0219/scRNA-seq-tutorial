@@ -247,12 +247,12 @@ netVisual_chord_cell(cellchat, signaling = pathways.show,
 par(mfrow=c(1,1))
 netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
 ```
-> 行： 热图的行代表了不同的细胞类型，这些细胞作为信号的发送者。<br>
-> 列： 热图的列代表了不同的细胞类型，这些细胞作为信号的接收者。<br>
-> 颜色深浅： 热图中的颜色深浅表示了通讯概率的大小。颜色越深，表示通讯概率越高，这意味着发送方细胞和接收方细胞之间的信号传递越强。<br>
-> 通信概率（Communication Prob.）： 右侧的颜色条是颜色映射的参考。图中的深红色表示较高的通讯概率（靠近0.05），浅色表示较低的通讯概率（靠近0或更低）。<br>
-> 顶部数值范围 (0 - 0.3)： 显示不同细胞类型接受到总传入信号强度(incoming）<br>
-> 右侧部分的数值范围 (0 - 0.4)：显示不同细胞类型发出的总传出信号强度(outcoming）<br>
+> * 行： 热图的行代表了不同的细胞类型，这些细胞作为信号的发送者。<br>
+> * 列： 热图的列代表了不同的细胞类型，这些细胞作为信号的接收者。<br>
+> * 颜色深浅： 热图中的颜色深浅表示了通讯概率的大小。颜色越深，表示通讯概率越高，这意味着发送方细胞和接收方细胞之间的信号传递越强。<br>
+> * 通信概率（Communication Prob.）： 右侧的颜色条是颜色映射的参考。图中的深红色表示较高的通讯概率（靠近0.05），浅色表示较低的通讯概率（靠近0或更低）。<br>
+> * 顶部数值范围 (0 - 0.3)： 显示不同细胞类型接受到总传入信号强度(incoming）<br>
+> * 右侧部分的数值范围 (0 - 0.4)：显示不同细胞类型发出的总传出信号强度(outcoming）<br>
 
 ### 计算配-受体对信号通路的贡献并可视化
 * 计算配-受体对信号通路的贡献并可视化
@@ -325,8 +325,8 @@ plotGeneExpression(cellchat, signaling = "VEGF",
                    enriched.only = TRUE, 
                    type = "violin")
 ```
-> 该功能提供 “violin”、“dot”、“bar” 三种类型的可视化。<br>
-> 或用户可以使用 extractEnrichedLR 提取与推断的 L-R 对或信号通路相关的信号转导基因，然后使用Seurat或其他软件包绘制基因表达。
+> * 该功能提供 “violin”、“dot”、“bar” 三种类型的可视化。<br>
+> * 使用 extractEnrichedLR 提取与推断的 L-R 对或信号通路相关的信号转导基因，然后使用Seurat或其他软件包绘制基因表达。
 
 ### 计算并可视化网络中心性得分
 ```R
@@ -346,10 +346,12 @@ netAnalysis_signalingRole_network(cellchat,
 > Influencer：影响者，用于识别在整个网络中对信息传播影响最大的细胞群体。 列（不同的细胞类型）：列表示具体的细胞类型。颜色深浅（Importance）：颜色的深浅表示每个细胞类型在特定角色中的重要性。颜色越深，表示该细胞类型在这个角色中的重要性越高（例如信号传递的强度或频率越大）；颜色越浅，表示该细胞类型在这个角色中的重要性较低。<br>
 
 ####  在二维空间中可视化占优势的发送者(源)和接收者(目标)
+* 从所有信号通路对聚合细胞-细胞通信网络的信号作用分析
 ```R
-# 从所有信号通路对聚合细胞-细胞通信网络的信号作用分析
 gg1 <- netAnalysis_signalingRole_scatter(cellchat);gg1
-# 对特定细胞间通讯网络的信号作用分析
+```
+* 对特定细胞间通讯网络的信号作用分析
+```R
 gg2 <- netAnalysis_signalingRole_scatter(cellchat, signaling = c("CXCL"));gg2
 gg1 + gg2
 ```
