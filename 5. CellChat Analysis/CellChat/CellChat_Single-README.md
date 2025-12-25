@@ -32,7 +32,12 @@ set.seed(1234)
 list.files()
 dir.create("./CellChat/")
 ```
+### Prepare scData for cellchat
+> CellChat需要两个用户输入:一个是细胞的基因表达数据，另一个是用户分配的细胞标签。<br>
+> 对于基因表达数据矩阵，行为基因，列为细胞。<br>
+> CellChat需要数据归一化数据。如果是count数据，使用normalizeData进行归一化。<br>
 ### Load scData for cellchat
+#### 输入需要分析的单细胞数据
 ```R
 seurat_obj <- qread("seurat_obj.qs")
 ncol(seurat_obj)
@@ -40,16 +45,16 @@ Idents(seurat_obj)
 DimPlot(seurat_obj, pt.size = 0.8,group.by = "celltype_major",label = T)
 table(seurat_obj@meta.data$celltype_major)
 ```
-### Prepare scData for cellchat
-> CellChat需要两个用户输入:一个是细胞的基因表达数据，另一个是用户分配的细胞标签。<br>
-> 对于基因表达数据矩阵，行为基因，列为细胞。<br>
-> CellChat需要数据归一化数据。如果是count数据，使用normalizeData进行归一化。<br>
+#### 准备cellchat需要的文件类型
 ```R
 data.input <- GetAssayData(seurat_obj, layer = 'data')           # normalized data matrix
 meta <- seurat_obj@meta.data[,c("orig.ident","celltype_major")]  # your cellType
 colnames(meta) <-  c("samples","labels")
 table(meta$labels)
 identical(rownames(meta),colnames(data.input))                   # 严格判断两个向量是否一致
+```
+#### 对细胞类型进行排序
+```R
 celltype_order <- c(
   "Tumor", "Fibroblast", "SMC", "T/NK", 
   "LEC", "Monocyte", "Mastcell", "Neutrophil", 
@@ -57,10 +62,16 @@ celltype_order <- c(
 meta$labels <- factor(meta$labels ,levels = celltype_order)
 table(meta$labels)
 ordered_indices <- order(meta$labels)
-## 对 meta 和 data.input 进行排序
 meta <- meta[ordered_indices, ]
 data.input <- data.input[, ordered_indices]
 identical(rownames(meta),colnames(data.input))
+```
+#### 构建cellchat Object
+```R
+cellchat <- createCellChat(object = data.input, 
+                           meta = meta, 
+                           group.by = "labels")
+levels(cellchat@idents)
 ```
 ### 设置配体-受体相互作用数据库
 研究者不建议把非蛋白质信号纳入分析，这可能是由于在单细胞转录组数据中无法准确检测或量化、对应的信号分子不直接由基因编码，而是代谢产物、离子等、生物学机制复杂，且缺乏统一可靠的注释和数据库支持等原因
@@ -69,6 +80,8 @@ CellChatDB <- CellChatDB.human          # use CellChatDB.mouse if running on mou
 showDatabaseCategory(CellChatDB)        # Display database category-All
 dplyr::glimpse(CellChatDB$interaction)
 ```
+> use CellChatDB.mouse if running on mouse data<br>
+
 #### 选取需要的数据库
 ```R
 # 使用CellChatDB的中特定的数据库进行细胞-细胞通信分析
@@ -90,7 +103,7 @@ cellchat@DB <- CellChatDB.use
 ```
 ### 预处理细胞-细胞通讯分析的表达数据
 ```R
-cellchat <- subsetData(cellchat) # This step is necessary even if using the whole databa
+cellchat <- subsetData(cellchat)                            # This step is necessary even if using the whole databa
 future::plan("multisession", workers = 1) # do parallel
 cellchat <- identifyOverExpressedGenes(cellchat)
 cellchat <- identifyOverExpressedInteractions(cellchat)
