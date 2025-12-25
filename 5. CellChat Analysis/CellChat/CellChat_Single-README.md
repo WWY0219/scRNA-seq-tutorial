@@ -152,10 +152,11 @@ write.csv(df.net,"df.net.csv")
 ```R
 df.net <- subsetCommunication(cellchat, sources.use = c(1,2), targets.use = c(4,5))
 ```
+* 提取感兴趣信号通路的细胞间通讯
 ```R
 df.net <- subsetCommunication(cellchat, signaling = c("WNT", "TGFb"))
 ```
-### 07. CellChat Visulization
+### 07. CellChat 可视化
 CellChat可以可视化聚合的蜂窝间通信网络。circle展示互作数目<br>
 * 计算聚合细胞-细胞通信网络
 ```R
@@ -179,17 +180,19 @@ pheatmap::pheatmap(cellchat@net$count, border_color = "black",
                    display_numbers = T,number_color="black",number_format = "%.0f")
 ```
 #### 贝克图
-指定顺序和指定颜色,生成颜色向量（例如使用彩虹色）,将颜色向量命名为矩阵的行名
+指定顺序和指定颜色,生成颜色向量（eg.使用彩虹色）,将颜色向量命名为矩阵的行名
 ```R
 celltype_order <- c(...)
 color.use <- rainbow(nrow(mat))
 names(color.use) <- rownames(mat)
 ```
+提取cellchat@net$weight命名为mat并排序
 ```R
 mat <- as.data.frame(cellchat@net$weight)
 mat <- mat[celltype_order,]                #行排序
 mat <- mat[,celltype_order] %>% as.matrix()
 ```
+循环出图
 ```R
 par(mfrow = c(5,4), xpd=TRUE,mar = c(1, 1, 1, 1))
 for (i in 1:nrow(mat)) {
@@ -202,7 +205,7 @@ for (i in 1:nrow(mat)) {
                    color.use = color.use)
 }
 ```
-> 如果图片显示不全,需要考虑是不是重新设置mfrow
+> 如果图片显示不全,需要考虑是否重新设置mfrow
 
 #### 层次结构图
 展示pathways
