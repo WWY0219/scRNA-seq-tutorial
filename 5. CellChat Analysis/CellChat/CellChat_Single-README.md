@@ -8,7 +8,7 @@ CellChat V2
 * Github:<https://github.com/jinworks/CellChat>
 * ZhiHu :<https://zhuanlan.zhihu.com/p/1894789522887250489>
 ## Usage
-### 01. Prepare Environment
+### 01. 加载包并准备环境
 ```R
 Sys.setenv(LANGUAGE = "en")
 options(stringsAsFactors = FALSE)
@@ -32,9 +32,9 @@ set.seed(1234)
 list.files()
 dir.create("./CellChat/")
 ```
-### 02. Prepare scData for cellchat
-> CellChat需要两个用户输入:一个是细胞的基因表达数据，另一个是用户分配的细胞标签。<br>
-> 对于基因表达数据矩阵，行为基因，列为细胞。<br>
+### 02. 准备CellChat输入数据
+> CellChat需要两个输入文件：1.细胞的基因表达数据;2.细胞标签。<br>
+> 基因表达数据矩阵，行为基因，列为细胞。<br>
 > CellChat需要数据归一化数据。如果是count数据，使用normalizeData进行归一化。<br>
 #### 输入需要分析的单细胞数据
 ```R
@@ -53,6 +53,7 @@ table(meta$labels)
 identical(rownames(meta),colnames(data.input))                   # 严格判断两个向量是否一致
 ```
 #### 对细胞类型进行排序
+> 这一步是有用的，后续亚群用的到，尽量同一大类的亚群分在一起
 ```R
 celltype_order <- c(
   "Tumor", "Fibroblast", "SMC", "T/NK", 
@@ -73,13 +74,14 @@ cellchat <- createCellChat(object = data.input,
 levels(cellchat@idents)
 ```
 ### 03. 设置配体-受体相互作用数据库
-研究者不建议把非蛋白质信号纳入分析，这可能是由于在单细胞转录组数据中无法准确检测或量化、对应的信号分子不直接由基因编码，而是代谢产物、离子等、生物学机制复杂，且缺乏统一可靠的注释和数据库支持等原因
+展示CellChat数据库
 ```R
 CellChatDB <- CellChatDB.human          # use CellChatDB.mouse if running on mouse data
 showDatabaseCategory(CellChatDB)        # Display database category-All
 dplyr::glimpse(CellChatDB$interaction)
 ```
 > use CellChatDB.mouse if running on mouse data<br>
+> 不建议把非蛋白质信号纳入分析，可能是由于在单细胞转录组数据中无法准确检测或量化、对应的信号分子不直接由基因编码，而是代谢产物、离子等、生物学机制复杂，且缺乏统一可靠的注释和数据库支持等原因<br>
 
 #### 选取需要的数据库
 * 除“非蛋白信号”外，使用所有CellChatDB数据进行细胞-细胞通信分析
@@ -96,13 +98,14 @@ CellChatDB.use <- subsetDB(CellChatDB, search = "Secreted Signaling", key = "ann
 CellChatDB.use <- subsetDB(CellChatDB, search = list(c("Secreted Signaling"), c("CellChatDB v1")), key = c("annotation", "version"))
 ```
 * 使用所有CellChatDB数据进行细胞-细胞通信分析
-> 研究者不建议以这种方式使用它，因为CellChatDB v2包含“非蛋白信号”(即代谢和突触信号)。<br>
 ```R
 CellChatDB.use <- CellChatDB 
 ```
+> 不建议以这种方式使用它，因为CellChatDB v2包含“非蛋白信号”(即代谢和突触信号)。<br>
+
 ### 04. 预处理细胞-细胞通讯分析的表达数据
 ```R
-cellchat <- subsetData(cellchat,features = NULL)            # This step is necessary even if using the whole databa
+cellchat <- subsetData(cellchat,features = NULL)            # This step is necessary even if using the whole database
 future::plan("multisession", workers = 1)                   # do parallel
 cellchat <- identifyOverExpressedGenes(cellchat)
 cellchat <- identifyOverExpressedInteractions(cellchat)
