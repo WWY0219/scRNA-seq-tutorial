@@ -276,8 +276,42 @@ netVisual_individual(cellchat, signaling = pathways.show,
 netVisual_individual(cellchat, signaling = pathways.show, 
                      pairLR.use = LR.show, layout = "circle")
 ```
+### 基于配-受体结果进一步可视化
+```R
+levels(cellchat@idents) 
+netVisual_bubble(cellchat, sources.use = seq(1:9), 
+                 targets.use = c(13), remove.isolate = FALSE)
+ggsave("bubbleplot_nont.pdf",width = 7,height = 20)
+```
+> **sources.use**是发出信号的细胞系,**target.use**是接受信号的细胞系<br>
 
+* 还可以增加signaling参数用于展示特定的配受体
+```R
+cellchat@netP$pathways
+netVisual_bubble(cellchat, sources.use = seq(1:9), 
+                 targets.use = c(13), 
+                 signaling = c("CXCL"),
+                 remove.isolate = FALSE)
+ggsave("bubbleplot2.pdf",width = 5,height = 10)
+````
+* 自定义signaling输入展示-所有通路汇总之后
+```R
+pairLR.use <- extractEnrichedLR(cellchat, signaling = c("CXCL","COLLAGEN","MK","CD99",
+                                                      "LAMININ","APP","DESMOSOME"))
+netVisual_bubble(cellchat, sources.use = c(1:9),
+                 targets.use = c(13,14), 
+                 pairLR.use = pairLR.use,
+                 remove.isolate = TRUE)
+ggsave("bubbleplot-LR.pdf",width = 5,height = 10)
+```
 
+* 可以通过增加下面的参数去设置X轴上的顺序
+```
+# sort.by.target = T
+# sort.by.source = T
+# sort.by.source = T, sort.by.target = T
+# sort.by.source = T, sort.by.target = T, sort.by.source.priority = FALSE
+```
 
 
 
