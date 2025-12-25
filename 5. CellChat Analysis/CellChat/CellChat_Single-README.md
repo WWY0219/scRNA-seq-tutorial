@@ -5,8 +5,8 @@
 ### Version
 CellChat V2
 ### Github Learning
-* Github
-* ZhiHu:<https://zhuanlan.zhihu.com/p/1894789522887250489>
+* Github:<https://github.com/jinworks/CellChat>
+* ZhiHu :<https://zhuanlan.zhihu.com/p/1894789522887250489>
 ## Usage
 ### 01. Prepare Environment
 ```R
