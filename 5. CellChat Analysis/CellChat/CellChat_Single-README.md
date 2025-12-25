@@ -169,6 +169,92 @@ netVisual_circle(cellchat@net$count, vertex.weight = groupSize,
 netVisual_circle(cellchat@net$weight, vertex.weight = groupSize, 
                  weight.scale = T, label.edge= F, title.name = "Interaction weights/strength")
 ```
+#### Heatmap 展示互作数据
+```R
+pheatmap::pheatmap(cellchat@net$count, border_color = "black", 
+                   cluster_cols = F, fontsize = 10, cluster_rows = F,
+                   display_numbers = T,number_color="black",number_format = "%.0f")
+```
+#### 贝克图
+指定顺序和指定颜色,生成颜色向量（例如使用彩虹色）,将颜色向量命名为矩阵的行名
+```R
+celltype_order <- c(...)
+color.use <- rainbow(nrow(mat))
+names(color.use) <- rownames(mat)
+```
+```R
+mat <- as.data.frame(cellchat@net$weight)
+mat <- mat[celltype_order,]                #行排序
+mat <- mat[,celltype_order] %>% as.matrix()
+```
+```R
+par(mfrow = c(5,4), xpd=TRUE,mar = c(1, 1, 1, 1))
+for (i in 1:nrow(mat)) {
+  mat2 <- matrix(0, nrow = nrow(mat), ncol = ncol(mat), dimnames = dimnames(mat))
+  mat2[i, ] <- mat[i, ]
+  netVisual_circle(mat2, vertex.weight = groupSize, 
+                   weight.scale = T, arrow.size=0.05,
+                   arrow.width=1, edge.weight.max = max(mat), 
+                   title.name = rownames(mat)[i],
+                   color.use = color.use)
+}
+```
+> 如果图片显示不全,需要考虑是不是重新设置mfrow
+
+#### 层次结构图
+展示pathways
+```R
+cellchat@netP$pathways
+levels(cellchat@idents) 
+pathways.show <- "CXCL"
+```
+* Hierarchy plot
+```R
+vertex.receiver = seq(1:9) # a numeric vector
+netVisual_aggregate(cellchat, signaling = pathways.show,
+                    vertex.receiver = vertex.receiver,layout= "hierarchy")
+                  # vertex.size = groupSize)
+```
+> vertex.receiver定义层次图的左边细胞<br>
+
+* circle plot
+```R
+netVisual_aggregate(cellchat, signaling = pathways.show,layout = "circle")
+```
+* Chord diagram
+```R
+par(mfrow=c(1,1))
+netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord")
+```
+* 分组弦图
+```R
+group.cellType <- c(rep("T/NK", 9), "B","VSMCs","endothelial","epithelial/cancer",
+                    "fibroblasts","mast","myeloid","plasma","proliferative" )
+levels(cellchat@idents)
+names(group.cellType) <- levels(cellchat@idents)
+netVisual_chord_cell(cellchat, signaling = pathways.show,
+                     group = group.cellType,
+                     title.name = paste0(pathways.show, " signaling network"))
+```
+* heatmap
+```R
+par(mfrow=c(1,1))
+netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
