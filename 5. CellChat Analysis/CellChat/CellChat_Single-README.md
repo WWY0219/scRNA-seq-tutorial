@@ -228,9 +228,9 @@ netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord")
 ```
 * 分组弦图
 ```R
+levels(cellchat@idents)
 group.cellType <- c(rep("T/NK", 9), "B","VSMCs","endothelial","epithelial/cancer",
                     "fibroblasts","mast","myeloid","plasma","proliferative" )
-levels(cellchat@idents)
 names(group.cellType) <- levels(cellchat@idents)
 netVisual_chord_cell(cellchat, signaling = pathways.show,
                      group = group.cellType,
@@ -241,8 +241,41 @@ netVisual_chord_cell(cellchat, signaling = pathways.show,
 par(mfrow=c(1,1))
 netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
 ```
+> 行： 热图的行代表了不同的细胞类型，这些细胞作为信号的发送者。<br>
+> 列： 热图的列代表了不同的细胞类型，这些细胞作为信号的接收者。<br>
+> 颜色深浅： 热图中的颜色深浅表示了通讯概率的大小。颜色越深，表示通讯概率越高，这意味着发送方细胞和接收方细胞之间的信号传递越强。<br>
+> 通信概率（Communication Prob.）： 右侧的颜色条是颜色映射的参考。图中的深红色表示较高的通讯概率（靠近0.05），浅色表示较低的通讯概率（靠近0或更低）。<br>
+> 顶部数值范围 (0 - 0.3)： 显示不同细胞类型接受到总传入信号强度(incoming）<br>
+> 右侧部分的数值范围 (0 - 0.4)：显示不同细胞类型发出的总传出信号强度(outcoming）<br>
 
-
+### 计算配-受体对信号通路的贡献并可视化
+* 计算配-受体对信号通路的贡献并可视化
+```R
+p1 <- netAnalysis_contribution(cellchat, signaling = pathways.show,
+                               title =  pathways.show)                 # 展现对特定通路的贡献程度
+p2 <- netAnalysis_contribution(cellchat, signaling = df.net$pathway_name)
+cowplot::plot_grid(p1, p2, align = "h",ncol=2)
+```
+* 可视化由单个配体-受体对介导的细胞间通讯
+```R
+pairLR <- extractEnrichedLR(cellchat, signaling = pathways.show,
+                                 geneLR.return = FALSE)
+pairLR
+LR.show <- pairLR[2,] # show one ligand-receptor pair
+```
+* Hierarchy plot
+```R
+vertex.receiver = seq(1,9) # a numeric vector
+netVisual_individual(cellchat, signaling = pathways.show,  
+                     pairLR.use = LR.show, 
+                     vertex.receiver = vertex.receiver,
+                     layout = "hierarchy")
+```
+* Circle plot
+```
+netVisual_individual(cellchat, signaling = pathways.show, 
+                     pairLR.use = LR.show, layout = "circle")
+```
 
 
 
