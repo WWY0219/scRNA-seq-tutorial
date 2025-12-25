@@ -1,4 +1,4 @@
-# **CellChat**
+# CellChat
 为了预测显著的通讯，CellChat识别出每个细胞组中差异过表达的配体和受体。为了量化由这些信号基因介导的两个细胞组之间的通讯，CellChat将每个相互作用与一个概率值相关联。 后者是基于配体在一个细胞组中的平均表达值和受体在另一个细胞组中的平均表达值，以及它们的协同因子<br>
 以下内容参考[知乎文章](https://zhuanlan.zhihu.com/p/717734779)<br>
 ## DESCRIPTION
@@ -115,17 +115,20 @@ cellchat <- smoothData(cellchat, adj = PPI.human)
 ### 细胞-细胞通信网络的推理
 参数设定：‘triMean’会产生更少但更强的相互作用；而‘truncatedMean’方法中，当‘trim’参数值较小时（例如 ‘trim = 0.1或0.05’），会输出更多的相互作用，从而能够检测到较弱的信号传导活动
 ```R
-# 该分析的关键参数是类型，即计算每个细胞组的平均基因表达的方法。默认情况下，type = “triMean”，产生较少但更强的交互。当设置 type = “truncatedMean” 时，应为trim分配一个值，从而产生更多交互。请详细检查上述计算每个细胞组平均基因表达的方法。
-# 使用的是投射到PPI网络的模式时候需要用FALSE。如果使用了raw data就需要设置为TRUE
-cellchat <- computeCommunProb(cellchat, type = "triMean",raw.use = FALSE) 
-
-# 如果所研究的信号没有被测到，可以采用如下函数进行探查，trim设为0.1或者0.05
-# computeAveExpr(cellchat, features = c("CXCL12","CXCR4"),type =  "truncatedMean",trim = 0.1)
-# 如果发现修改参数之后所研究的信号被测到了，那就修改代码如下
-# cellchat <- computeCommunProb(cellchat, type =  "truncatedMean",trim = 0.1,raw.use = FALSE) 
-
-# min.cells是设置阈值，最小是需要10个细胞参与通讯推断(可以自定义)
+cellchat <- computeCommunProb(cellchat, type = "triMean",raw.use = FALSE)
 cellchat <- filterCommunication(cellchat, min.cells = 10)
+```
+> 该分析的关键参数是类型，即计算每个细胞组的平均基因表达的方法。默认情况下，type = “triMean”，产生较少但更强的交互。当设置 type = “truncatedMean” 时，应为trim分配一个值，从而产生更多交互。请详细检查上述计算每个细胞组平均基因表达的方法。<br>
+> 使用的是投射到PPI网络的模式时候需要用FALSE。如果使用了raw data就需要设置为TRUE<br>
+> min.cells是设置阈值，最小是需要10个细胞参与通讯推断(可以自定义)
+
+* 如果所研究的信号没有被测到，可以采用如下函数进行探查，trim设为0.1或者0.05
+``` R
+computeAveExpr(cellchat, features = c("CXCL12","CXCR4"),type =  "truncatedMean",trim = 0.1)
+```
+* 如果发现修改参数之后所研究的信号被测到了，那就修改代码如下
+```R
+cellchat <- computeCommunProb(cellchat, type =  "truncatedMean",trim = 0.1,raw.use = FALSE) 
 ```
 
 ### 在信号通路水平上推断细胞间通讯
