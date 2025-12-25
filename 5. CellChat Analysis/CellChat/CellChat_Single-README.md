@@ -8,7 +8,7 @@ CellChat V2
 * Github
 * ZhiHu:<https://zhuanlan.zhihu.com/p/1894789522887250489>
 ## Usage
-### Prepare Environment
+### 01. Prepare Environment
 ```R
 Sys.setenv(LANGUAGE = "en")
 options(stringsAsFactors = FALSE)
@@ -32,7 +32,7 @@ set.seed(1234)
 list.files()
 dir.create("./CellChat/")
 ```
-### Prepare scData for cellchat
+### 02. Prepare scData for cellchat
 > CellChat需要两个用户输入:一个是细胞的基因表达数据，另一个是用户分配的细胞标签。<br>
 > 对于基因表达数据矩阵，行为基因，列为细胞。<br>
 > CellChat需要数据归一化数据。如果是count数据，使用normalizeData进行归一化。<br>
@@ -72,7 +72,7 @@ cellchat <- createCellChat(object = data.input,
                            group.by = "labels")
 levels(cellchat@idents)
 ```
-### 设置配体-受体相互作用数据库
+### 03. 设置配体-受体相互作用数据库
 研究者不建议把非蛋白质信号纳入分析，这可能是由于在单细胞转录组数据中无法准确检测或量化、对应的信号分子不直接由基因编码，而是代谢产物、离子等、生物学机制复杂，且缺乏统一可靠的注释和数据库支持等原因
 ```R
 CellChatDB <- CellChatDB.human          # use CellChatDB.mouse if running on mouse data
@@ -100,7 +100,7 @@ CellChatDB.use <- subsetDB(CellChatDB, search = list(c("Secreted Signaling"), c(
 ```R
 CellChatDB.use <- CellChatDB 
 ```
-### 预处理细胞-细胞通讯分析的表达数据
+### 04. 预处理细胞-细胞通讯分析的表达数据
 ```R
 cellchat <- subsetData(cellchat,features = NULL)            # This step is necessary even if using the whole databa
 future::plan("multisession", workers = 1)                   # do parallel
@@ -112,7 +112,7 @@ cellchat <- smoothData(cellchat, adj = PPI.human)
 > 同时也提供了projectData函数,通过扩散过程基于高置信度实验验证的蛋白质互作网络中的邻近节点对基因表达值进行平滑处理。该功能在处理测序深度较浅的单细胞数据时尤为有用，因其能减少信号基因（特别是配体/受体亚基可能存在的零表达）的dropout效应。不担心其可能在扩散过程引入伪影，因其仅会引发极微弱的通讯信号。<br>
 > 原来是projectData，新版是smoothData函数
 
-### 细胞-细胞通信网络的推理
+### 05. 细胞-细胞通信网络的推理
 参数设定：‘triMean’会产生更少但更强的相互作用；而‘truncatedMean’方法中，当‘trim’参数值较小时（例如 ‘trim = 0.1或0.05’），会输出更多的相互作用，从而能够检测到较弱的信号传导活动
 ```R
 cellchat <- computeCommunProb(cellchat, type = "triMean",raw.use = FALSE)
@@ -131,17 +131,32 @@ computeAveExpr(cellchat, features = c("CXCL12","CXCR4"),type =  "truncatedMean",
 cellchat <- computeCommunProb(cellchat, type =  "truncatedMean",trim = 0.1,raw.use = FALSE) 
 ```
 
-### 在信号通路水平上推断细胞间通讯
+### 06. 在信号通路水平上推断细胞间通讯
+CellChat通过汇总与每个信号通路相关的所有配体-受体相互作用的通信概率来计算信号通路水平上的通信概率
 ```R
-# CellChat通过汇总与每个信号通路相关的所有配体-受体相互作用的通信概率来计算信号通路水平上的通信概率。 
-# NB:推断的每个配体-受体对的细胞间通信网络和每个信号通路分别存储在槽'net'和'netP'中。
 cellchat <- computeCommunProbPathway(cellchat)
+```
+> NB:推断的每个配体-受体对的细胞间通信网络和每个信号通路分别存储在槽'net'和'netP'中。<br>
 
-#数据提取，subsetCommunication函数，一般全部提取并保存
-#df.net <- subsetCommunication(cellchat, sources.use = c(1,2), targets.use = c(4,5)) #表示从细胞群 1 和 2 向细胞群 4 和 5 推断出的细胞间通讯。
-#df.net <- subsetCommunication(cellchat, signaling = c("WNT", "TGFb"))
+数据提取，subsetCommunication函数，一般全部提取并保存
+```R
 df.net <- subsetCommunication(cellchat)
 qsave(cellchat,"cellchat.qs")
 save(df.net,file = "df.net.Rdata")
 write.csv(df.net,"df.net.csv")
 ```
+* 表示从细胞群 1 和 2 向细胞群 4 和 5 推断出的细胞间通讯
+```R
+df.net <- subsetCommunication(cellchat, sources.use = c(1,2), targets.use = c(4,5))
+```
+```R
+df.net <- subsetCommunication(cellchat, signaling = c("WNT", "TGFb"))
+```
+### 07. CellChat Visulization
+
+
+
+
+
+
+
