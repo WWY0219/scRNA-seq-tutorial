@@ -102,15 +102,16 @@ CellChatDB.use <- CellChatDB
 ```
 ### 预处理细胞-细胞通讯分析的表达数据
 ```R
-cellchat <- subsetData(cellchat)                            # This step is necessary even if using the whole databa
-future::plan("multisession", workers = 1) # do parallel
+cellchat <- subsetData(cellchat,features = NULL)            # This step is necessary even if using the whole databa
+future::plan("multisession", workers = 1)                   # do parallel
 cellchat <- identifyOverExpressedGenes(cellchat)
 cellchat <- identifyOverExpressedInteractions(cellchat)
-#默认情况下,cellchat使用object@data.signaling进行网络推断
-#同时也提供了projectData函数,通过扩散过程基于高置信度实验验证的蛋白质互作网络中的邻近节点对基因表达值进行平滑处理。该功能在处理测序深度较浅的单细胞数据时尤为有用，因其能减少信号基因（特别是配体/受体亚基可能存在的零表达）的dropout效应。不担心其可能在扩散过程引入伪影，因其仅会引发极微弱的通讯信号。
-# 原来是projectData，新版是smoothData函数
 cellchat <- smoothData(cellchat, adj = PPI.human)
 ```
+> 默认情况下,cellchat使用object@data.signaling进行网络推断<br>
+> 同时也提供了projectData函数,通过扩散过程基于高置信度实验验证的蛋白质互作网络中的邻近节点对基因表达值进行平滑处理。该功能在处理测序深度较浅的单细胞数据时尤为有用，因其能减少信号基因（特别是配体/受体亚基可能存在的零表达）的dropout效应。不担心其可能在扩散过程引入伪影，因其仅会引发极微弱的通讯信号。<br>
+> 原来是projectData，新版是smoothData函数
+
 ### 细胞-细胞通信网络的推理
 参数设定：‘triMean’会产生更少但更强的相互作用；而‘truncatedMean’方法中，当‘trim’参数值较小时（例如 ‘trim = 0.1或0.05’），会输出更多的相互作用，从而能够检测到较弱的信号传导活动
 ```R
@@ -137,9 +138,7 @@ cellchat <- computeCommunProbPathway(cellchat)
 #df.net <- subsetCommunication(cellchat, sources.use = c(1,2), targets.use = c(4,5)) #表示从细胞群 1 和 2 向细胞群 4 和 5 推断出的细胞间通讯。
 #df.net <- subsetCommunication(cellchat, signaling = c("WNT", "TGFb"))
 df.net <- subsetCommunication(cellchat)
-
 qsave(cellchat,"cellchat.qs")
 save(df.net,file = "df.net.Rdata")
-```
-
 write.csv(df.net,"df.net.csv")
+```
