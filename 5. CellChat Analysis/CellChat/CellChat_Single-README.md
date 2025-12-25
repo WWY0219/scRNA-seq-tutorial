@@ -312,11 +312,32 @@ ggsave("bubbleplot-LR.pdf",width = 5,height = 10)
 # sort.by.source = T, sort.by.target = T
 # sort.by.source = T, sort.by.target = T, sort.by.source.priority = FALSE
 ```
+### 使用小提琴/点图绘制信号转导基因表达分布
+CellChat可以使用Seurat包装函数plotGeneExpression绘制与L-R对或信号通路相关的信号转导基因的基因表达分布。
+```R
+plotGeneExpression(cellchat, signaling = "VEGF", 
+                   enriched.only = TRUE, 
+                   type = "violin")
+```
+> 该功能提供 “violin”、“dot”、“bar” 三种类型的可视化。<br>
+> 或用户可以使用 extractEnrichedLR 提取与推断的 L-R 对或信号通路相关的信号转导基因，然后使用Seurat或其他软件包绘制基因表达。
 
-
-
-
-
+### 计算并可视化网络中心性得分
+```R
+cellchat@netP$pathways
+pathways.show <- "VEGF"
+# Compute the network centrality scores
+cellchat <- netAnalysis_computeCentrality(cellchat, 
+                                          slot.name = "netP") 
+netAnalysis_signalingRole_network(cellchat, 
+                                  signaling = pathways.show, 
+                                  width = 8, height = 2.5, font.size = 10)                                  
+```
+* 行（Sender, Receiver, Mediator, Influencer）：行表示在信号通路网络中，不同细胞类型扮演的角色：
+> Sender：信号的发送者，即哪些细胞类型是主要的信号发出者。<br>
+> Receiver：信号的接收者，即哪些细胞类型是主要的信号接收者。<br>
+> Mediator：中介者，用于识别在信号传播路径中起中介作用的细胞群体。<br>
+> Influencer：影响者，用于识别在整个网络中对信息传播影响最大的细胞群体。 列（不同的细胞类型）：列表示具体的细胞类型。颜色深浅（Importance）：颜色的深浅表示每个细胞类型在特定角色中的重要性。颜色越深，表示该细胞类型在这个角色中的重要性越高（例如信号传递的强度或频率越大）；颜色越浅，表示该细胞类型在这个角色中的重要性较低。<br>
 
 
 
