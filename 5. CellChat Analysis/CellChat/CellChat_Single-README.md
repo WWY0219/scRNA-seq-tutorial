@@ -1,12 +1,12 @@
 # CellChat
 为了预测显著的通讯，CellChat识别出每个细胞组中差异过表达的配体和受体。为了量化由这些信号基因介导的两个细胞组之间的通讯，CellChat将每个相互作用与一个概率值相关联。 后者是基于配体在一个细胞组中的平均表达值和受体在另一个细胞组中的平均表达值，以及它们的协同因子<br>
-以下内容参考[知乎文章](https://zhuanlan.zhihu.com/p/717734779)<br>
 ## DESCRIPTION
 ### Version
 CellChat V2
 ### Github Learning
-* Github:<https://github.com/jinworks/CellChat>
-* ZhiHu :<https://zhuanlan.zhihu.com/p/1894789522887250489>
+* Github :<https://github.com/jinworks/CellChat>
+* ZhiHu-1:<https://zhuanlan.zhihu.com/p/1894789522887250489>
+* Zhihu-2:<https://zhuanlan.zhihu.com/p/717734779>
 ## Usage
 ### 01. 加载包并准备环境
 ```R
