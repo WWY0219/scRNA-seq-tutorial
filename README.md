@@ -1,5 +1,5 @@
 # scRNA-seq-tutorial
-The relevant codes used by WWY for analyzing **scRNA-seq**. Please be careful!!!
+这个文档是由WWY创建并用来分析**scRNA-seq**. 借鉴了许多大佬的代码，希望能发好文章！
 ## Environment
 R 4.3.2<br>
 Seurat V5
