@@ -273,11 +273,34 @@ draw(ht1 + ht2, ht_gap = unit(0.5, "cm"))
 通过比较通信概率来识别功能失调的信号
 * Comparing communications on a merged object
 ```R
-netVisual_bubble(cellchat, sources.use = 4, targets.use = c(5:11),  comparison = c(1, 2), angle.x = 45)
+netVisual_bubble(cellchat, sources.use = 4, targets.use = c(5:7),  comparison = c(1, 2), angle.x = 45)
+gg1 <- netVisual_bubble(cellchat, sources.use = 4, targets.use = c(5:7),  comparison = c(1, 2), max.dataset = 2, title.name = "Increased signaling in Left", angle.x = 45, remove.isolate = T)
+gg2 <- netVisual_bubble(cellchat, sources.use = 4, targets.use = c(5:7),  comparison = c(1, 2), max.dataset = 1, title.name = "Decreased signaling in right", angle.x = 45, remove.isolate = T)
+gg1
+gg2
 ```
 > 可以比较一些细胞群与其他细胞群的配体-受体对介导的通信概率。这可以通过`comparison`在函数中设置来完成`netVisual_bubble`<br>
 
-### Part Ⅳ：使用层次图、圈图或者弦图直观地比较细胞间通信
+### Part Ⅳ:通过差异表达分析识别功能障碍性信号
+```
+# 设定"实验组"
+pos.dataset = "right"
+features.name = paste0(pos.dataset, ".merged")
+cellchat <- identifyOverExpressedGenes(cellchat, group.dataset = "datasets", pos.dataset = pos.dataset, features.name = features.name, only.pos = FALSE, thresh.pc = 0.1, thresh.fc = 0.05,thresh.p = 0.05, group.DE.combined = FALSE) 
+
+net <- netMappingDEG(cellchat, features.name = features.name, variable.all = TRUE)
+net.up <- subsetCommunication(cellchat, net = net, datasets = "left",ligand.logFC = 0.05, receptor.logFC = NULL)
+net.down <- subsetCommunication(cellchat, net = net, datasets = "right",ligand.logFC = -0.05, receptor.logFC = NULL)
+
+gene.up <- extractGeneSubsetFromPair(net.up, cellchat)
+gene.down <- extractGeneSubsetFromPair(net.down, cellchat)
+
+# 自定义特征和感兴趣的细胞群体找到所有显著的outgoing/incoming/both向信号
+df <- findEnrichedSignaling(object.list[[2]], features = c("CCL19", "CXCL12"), idents = c("Treg", "Tm"), pattern ="outgoing")
+```
+
+
+### Part Ⅴ：使用层次图、圈图或者弦图直观地比较细胞间通信
 与单个数据集的 CellChat 分析类似，我们可以使用层次图、圆图或弦图来可视化细胞间通信网络。 边缘颜色/权重，节点颜色/大小/形状：在所有可视化图中，边缘颜色与作为发送者的源一致，边缘权重与交互强度成正比。较粗的边缘线表示较强的信号。在Hierarchy plot 和 Circle plot中，圆圈大小与每个单元组中的单元数成正比。在层次图中，实心圆和空心圆分别代表源和目标。在和弦图中，内部较细的条颜色表示从相应外部条接收信号的目标。内部条的大小与目标接收到的信号强度成正比。
 ```R
 pathways.show <- c("CXCL") 
@@ -299,7 +322,7 @@ for (i in 1:length(object.list)) {
   netVisual_aggregate(object.list[[i]], signaling = pathways.show, layout = "chord", signaling.name = paste(pathways.show, names(object.list)[i]))
 }
 ```
-### Part Ⅴ：比较不同数据集之间地信号基因表达分布
+### Part Ⅵ：比较不同数据集之间地信号基因表达分布
 我们可以使用 Seurat 包装函数绘制与 LR 对或信号通路相关的信号基因的基因表达分布`plotGeneExpression`
 ```R
 cellchat@meta$datasets = factor(cellchat@meta$datasets, levels = c("NL", "LS")) # set factor level
