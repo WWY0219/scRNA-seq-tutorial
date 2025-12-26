@@ -43,56 +43,61 @@ dir.create("./CellChat/
 ### 02. 加载每个数据集的cellChat对象，然后合并在一起
 #### 需要在每个数据集中单独运行CellChat
 ```R
-seurat_obj <- qread("seurat_obj.qs")
-ncol(seurat_obj)
-Idents(seurat_obj)
-DimPlot(seurat_obj, pt.size = 0.8,group.by = "celltype_major",label = T)
-table(seurat_obj@meta.data$celltype_major)
-
-# 自己分析的时候记得改名，这里是scRNA_left
-data.input <- GetAssayData(scRNA_left, slot = 'data') # normalized data matrix
-meta <- scRNA_left@meta.data[,c("orig.ident","celltype_major")]
+seurat_obj_1 <- qread("seurat_obj_1.qs")
+ncol(seurat_obj_1)
+Idents(seurat_obj_1)
+DimPlot(seurat_obj_1, pt.size = 0.8,group.by = "celltype_major",label = T)
+table(seurat_obj_1@meta.data$celltype_major)
+```
+* 自己分析的时候记得改名，这里是seurat_obj_1
+```R
+data.input <- GetAssayData(seurat_obj_1, slot = 'data') # normalized data matrix
+meta <- seurat_obj_1@meta.data[,c("orig.ident","celltype_major")]
 colnames(meta) <-  c("samples","labels")
 table(meta$labels)
 table(meta$labels)
 identical(rownames(meta),colnames(data.input))
-## 根据研究情况进行细胞排序
+```
+* 根据研究情况进行细胞排序
+```R
 celltype_order <- c(
   "Tumor", "Fibroblast", "SMC", "T/NK", 
   "LEC", "Monocyte", "Mastcell", "Neutrophil", 
   "Endothelial","Epithelial")
 meta$labels <- factor(meta$labels ,levels = celltype_order)
 table(meta$labels)
-# 根据 meta$labels 的顺序进行排序
 ordered_indices <- order(meta$labels)
-# 对 meta 和 data.input 进行排序
 meta <- meta[ordered_indices, ]
 data.input <- data.input[, ordered_indices]
 identical(rownames(meta),colnames(data.input))
-
-# 构建cellchat
+```
+* 构建cellchat
+```R
 cellchat <- createCellChat(object = data.input, meta = meta, group.by = "labels")
 CellChatDB <- CellChatDB.human  
 CellChatDB.use <- subsetDB(CellChatDB)
 cellchat@DB <- CellChatDB.use
-cellchat <- subsetData(cellchat) # This step is necessary even if using the whole databa
-future::plan("multisession", workers = 1) # do parallel
+cellchat <- subsetData(cellchat) 
+future::plan("multisession", workers = 1) 
 cellchat <- identifyOverExpressedGenes(cellchat)
 cellchat <- identifyOverExpressedInteractions(cellchat)
 cellchat <- smoothData(cellchat, adj = PPI.human)
 cellchat <- computeCommunProb(cellchat, type = "triMean",raw.use = FALSE) 
 cellchat <- filterCommunication(cellchat, min.cells = 10)
 cellchat <- computeCommunProbPathway(cellchat)
-df.net_left <- subsetCommunication(cellchat)
+df.net_1 <- subsetCommunication(cellchat)
 cellchat <- aggregateNet(cellchat)
-cellchat_left <- netAnalysis_computeCentrality(cellchat, 
+cellchat_1 <- netAnalysis_computeCentrality(cellchat, 
                                           slot.name = "netP")
+```
+```R
+qsave(cellchat_1,"cellchat_1.qs")
 ```
 #### 将不同的CellChat对象合并在一起
 ```R
-cellchat.NL <- readRDS("/Users/jinsuoqin/Documents/CellChat/tutorial/cellchat_humanSkin_NL.rds")
-cellchat.LS <- readRDS("/Users/jinsuoqin/Documents/CellChat/tutorial/cellchat_humanSkin_LS.rds")
-object.list <- list(NL = cellchat.NL, LS = cellchat.LS)
+cellchat.1 <- qread("cellchat_1.qs")
+cellchat.2 <- qread("cellchat_2.qs")
+object.list <- list(N = cellchat.1, T = cellchat.2)
 cellchat <- mergeCellChat(object.list, add.names = names(object.list))
 cellchat
 ```
