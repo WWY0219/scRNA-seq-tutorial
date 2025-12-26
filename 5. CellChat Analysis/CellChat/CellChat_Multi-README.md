@@ -148,8 +148,9 @@ group.cellType <- c(rep("FIB", 4), rep("DC", 4), rep("TC", 4))
 group.cellType <- factor(group.cellType, levels = c("FIB", "DC", "TC"))
 object.list <- lapply(object.list, function(x) {mergeInteractions(x, group.cellType)})
 cellchat <- mergeCellChat(object.list, add.names = names(object.list))
-#> Merge the following slots: 'data.signaling','net', 'netP','meta', 'idents', 'var.features' , 'DB', and 'LR'.
 ```
+> Merge the following slots: 'data.signaling','net', 'netP','meta', 'idents', 'var.features' , 'DB', and 'LR'.<br>
+
 然后，我们可以显示每个数据集中任意两种细胞类型之间的相互作用数量或相互作用强度
 ```R
 weight.max <- getMaxWeight(object.list, slot.name = c("idents", "net", "net"), attribute = c("idents","count", "count.merged"))
@@ -187,17 +188,27 @@ patchwork::wrap_plots(plots = list(gg1,gg2))
 ### Part Ⅱ：识别保守和特定环境的信号通路
 CellChat 可以根据它们在多种生物条件下的细胞间通信网络识别具有较大（或较小）差异的信号网络、信号组以及保守和特定于上下文的信号通路
 #### 根据功能/结构相似性识别具有较大（或较小）差异的信号网络以及信号组
-CellChat 基于其功能和拓扑相似性对推断的通信网络执行联合流形学习和分类。注意：这种分析适用于两个以上的数据集。 功能相似性：高度的功能相似性表明主要的发送者和接收者相似，可以解释为两条信号通路或两个配体-受体对表现出相似和/或冗余的作用。注意：功能相似性分析不适用于具有不同细胞类型组成的多个数据集。 结构相似性：结构相似性用于比较它们的信令网络结构，不考虑发送者和接收者的相似性。注意：结构相似性分析适用于具有相同细胞类型组成或细胞类型组成截然不同的多个数据集。 在这里，我们可以基于功能相似性运行流形和分类学习分析，因为两个数据集具有相同的细胞类型组成
+CellChat 基于其功能和拓扑相似性对推断的通信网络执行联合流形学习和分类。注意：这种分析适用于两个以上的数据集。 <br>
+功能相似性：高度的功能相似性表明主要的发送者和接收者相似，可以解释为两条信号通路或两个配体-受体对表现出相似和/或冗余的作用。注意：功能相似性分析不适用于具有不同细胞类型组成的多个数据集。 <br>
+结构相似性：结构相似性用于比较它们的信令网络结构，不考虑发送者和接收者的相似性。注意：结构相似性分析适用于具有相同细胞类型组成或细胞类型组成截然不同的多个数据集。 <br>
+在这里，我们可以基于功能相似性运行流形和分类学习分析，因为两个数据集具有相同的细胞类型组成<br>
 #### 根据功能相似性识别信号组
+* Compute signaling network similarity for datasets 1 2
 ```R
 cellchat <- computeNetSimilarityPairwise(cellchat, type = "functional")
-#> Compute signaling network similarity for datasets 1 2
+```
+* Manifold learning of the signaling networks for datasets 1 2
+```R
 cellchat <- netEmbedding(cellchat, type = "functional")
-#> Manifold learning of the signaling networks for datasets 1 2
+```
+* Classification learning of the signaling networks for datasets 1 2
+```R
 cellchat <- netClustering(cellchat, type = "functional")
-#> Classification learning of the signaling networks for datasets 1 2
-# Visualization in 2D-space
+```
+* Visualization in 2D-space
+```R
 netVisual_embeddingPairwise(cellchat, type = "functional", label.size = 3.5)
+```
 #> 2D visualization of signaling networks from datasets 1 2
 ```
 ```R
