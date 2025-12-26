@@ -251,9 +251,9 @@ gg1 + gg2
 ```
 #### 比较每个细胞群相关的传出（或传入）信号
 上述分析将来自传出和传入信令的信息汇总在一起。我们还可以比较两个数据集之间的传出（或传入）信号模式，从而识别表现出不同信号模式的信号通路/配体受体。 我们可以组合来自不同数据集的所有已识别信号通路，从而通过将传出和传入信号聚合在一起，将它们并排比较，包括传出信号、传入信号和整体信号。注意：rankNet也显示了整体信号的比较，但它没有显示特定细胞群中的信号强度
+* combining all the identified signaling pathways from different datasets 
 ```R
 i = 1
-# combining all the identified signaling pathways from different datasets 
 pathway.union <- union(object.list[[i]]@netP$pathways, object.list[[i+1]]@netP$pathways)
 ht1 = netAnalysis_signalingRole_heatmap(object.list[[i]], pattern = "outgoing", signaling = pathway.union, title = names(object.list)[i], width = 5, height = 6)
 ht2 = netAnalysis_signalingRole_heatmap(object.list[[i+1]], pattern = "outgoing", signaling = pathway.union, title = names(object.list)[i+1], width = 5, height = 6)
@@ -271,12 +271,12 @@ draw(ht1 + ht2, ht_gap = unit(0.5, "cm"))
 ```
 ### Part Ⅲ：识别上调和下调的信号配体-受体对
 通过比较通信概率来识别功能失调的信号
-> 可以比较一些细胞群与其他细胞群的配体-受体对介导的通信概率。这可以通过`comparison`在函数中设置来完成`netVisual_bubble`<br>
-
+* Comparing communications on a merged object
 ```R
 netVisual_bubble(cellchat, sources.use = 4, targets.use = c(5:11),  comparison = c(1, 2), angle.x = 45)
-#> Comparing communications on a merged object
 ```
+> 可以比较一些细胞群与其他细胞群的配体-受体对介导的通信概率。这可以通过`comparison`在函数中设置来完成`netVisual_bubble`<br>
+
 ### Part Ⅳ：使用层次图、圈图或者弦图直观地比较细胞间通信
 与单个数据集的 CellChat 分析类似，我们可以使用层次图、圆图或弦图来可视化细胞间通信网络。 边缘颜色/权重，节点颜色/大小/形状：在所有可视化图中，边缘颜色与作为发送者的源一致，边缘权重与交互强度成正比。较粗的边缘线表示较强的信号。在Hierarchy plot 和 Circle plot中，圆圈大小与每个单元组中的单元数成正比。在层次图中，实心圆和空心圆分别代表源和目标。在和弦图中，内部较细的条颜色表示从相应外部条接收信号的目标。内部条的大小与目标接收到的信号强度成正比。
 ```R
