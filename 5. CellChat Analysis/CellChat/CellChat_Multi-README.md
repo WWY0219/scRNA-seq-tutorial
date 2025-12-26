@@ -187,6 +187,8 @@ gg1 <- netAnalysis_signalingChanges_scatter(cellchat, idents.use = "Inflam. DC",
 gg2 <- netAnalysis_signalingChanges_scatter(cellchat, idents.use = "cDC1", signaling.exclude = c("MIF"))
 patchwork::wrap_plots(plots = list(gg1,gg2))
 ```
+> 正值表示在第二种情况中升高，负值表示在第一种情况中升高<br>
+
 ### Part Ⅱ：识别保守和特定环境的信号通路
 CellChat 可以根据它们在多种生物条件下的细胞间通信网络识别具有较大（或较小）差异的信号网络、信号组以及保守和特定于上下文的信号通路
 #### 根据功能/结构相似性识别具有较大（或较小）差异的信号网络以及信号组
