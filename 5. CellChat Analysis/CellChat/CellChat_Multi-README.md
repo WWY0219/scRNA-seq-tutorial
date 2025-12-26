@@ -115,6 +115,7 @@ gg2 <- compareInteractions(cellchat, show.legend = F, group = c(1,2), measure = 
 gg1 + gg2
 ```
 #### 比较不同细胞群之间的相互作用数量和相互作用强度
+* 柱状图
 ```R
 par(mfrow = c(1,2), xpd=TRUE)
 netVisual_diffInteraction(cellchat, weight.scale = T)
@@ -125,6 +126,12 @@ gg3 <- rankNet(cellchat, mode = "comparison", stacked = T, do.stat = TRUE)
 gg4 <- rankNet(cellchat, mode = "comparison", stacked = F, do.stat = TRUE)
 gg3 + gg4
 ```
+* circle
+```R
+netVisual_diffInteraction(cellchat, weight.scale = T)
+netVisual_diffInteraction(cellchat, weight.scale = T, measure = "weight")
+```
+* Heatmap
 ```R
 gg1 <- netVisual_heatmap(cellchat)
 gg2 <- netVisual_heatmap(cellchat, measure = "weight")
