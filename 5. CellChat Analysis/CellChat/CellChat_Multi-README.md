@@ -123,11 +123,6 @@ netVisual_diffInteraction(cellchat, weight.scale = T, measure = "weight")
 ```
 > 通过圆形图可视化两个数据集中细胞间通讯网络中相互作用数量的差异或相互作用强度，其中红色或者蓝色的着色边代表与第一个数据集相比，第二个数据集中上调或者下调的信号。分组顺序是按照object.list中的顺序而定的。<br>
 
-```R
-gg3 <- rankNet(cellchat, mode = "comparison", stacked = T, do.stat = TRUE)
-gg4 <- rankNet(cellchat, mode = "comparison", stacked = F, do.stat = TRUE)
-gg3 + gg4
-```
 * 显示两个数据集中不同细胞群体间相互作用数量或相互作用强度的热图
 ```R
 gg1 <- netVisual_heatmap(cellchat)
