@@ -321,23 +321,52 @@ computeEnrichmentScore(net.up, species = 'human', variable.both = TRUE)
 ### Part Ⅴ：使用层次图、圈图或者弦图直观地比较细胞间通信
 我们可以使用层次图、圆图或弦图来可视化细胞间通信网络。 边缘颜色/权重，节点颜色/大小/形状：在所有可视化图中，边缘颜色与作为发送者的源一致，边缘权重与交互强度成正比。较粗的边缘线表示较强的信号。在Hierarchy plot 和 Circle plot中，圆圈大小与每个单元组中的单元数成正比。在层次图中，实心圆和空心圆分别代表源和目标。在和弦图中，内部较细的条颜色表示从相应外部条接收信号的目标。内部条的大小与目标接收到的信号强度成正比。
 ```R
+athways.show <- c("CXCL") 
+weight.max <- getMaxWeight(object.list, slot.name = c("netP"), attribute = pathways.show) # control the edge weights across different datasets
+par(mfrow = c(1,2), xpd=TRUE)
+for (i in 1:length(object.list)) {
+  netVisual_aggregate(object.list[[i]], signaling = pathways.show, layout = "circle", edge.weight.max = weight.max[1], edge.width.max = 10, signaling.name = paste(pathways.show, names(object.list)[i]))
+}
+```
+* Heatmap
+```R
 pathways.show <- c("CXCL") 
 par(mfrow = c(1,2), xpd=TRUE)
 ht <- list()
 for (i in 1:length(object.list)) {
   ht[[i]] <- netVisual_heatmap(object.list[[i]], signaling = pathways.show, color.heatmap = "Reds",title.name = paste(pathways.show, "signaling ",names(object.list)[i]))
 }
-#> Do heatmap based on a single object 
-#> 
-#> Do heatmap based on a single object
 ComplexHeatmap::draw(ht[[1]] + ht[[2]], ht_gap = unit(0.5, "cm"))
 ```
+* Chord diagram
 ```R
-# Chord diagram
 pathways.show <- c("CXCL") 
 par(mfrow = c(1,2), xpd=TRUE)
 for (i in 1:length(object.list)) {
   netVisual_aggregate(object.list[[i]], signaling = pathways.show, layout = "chord", signaling.name = paste(pathways.show, names(object.list)[i]))
+}
+```
+* Chord diagram 的另外一种形式
+```R
+group.cellType <- c(rep("FIB", 4), rep("DC", 4), rep("TC", 4)) 
+names(group.cellType) <- levels(object.list[[1]]@idents)
+pathways.show <- c("CXCL") 
+par(mfrow = c(1,2), xpd=TRUE)
+for (i in 1:length(object.list)) {
+   netVisual_chord_cell(object.list[[i]], signaling = pathways.show, group = group.cellType, title.name = paste0(pathways.show, " signaling network - ", names(object.list)[i]))
+}
+```
+```R
+par(mfrow = c(1, 2), xpd=TRUE)
+for (i in 1:length(object.list)) {
+  netVisual_chord_gene(object.list[[i]], sources.use = 4, targets.use = c(5:6), lab.cex = 0.5, title.name = paste0("Signaling from Tm - ", names(object.list)[i]))
+}
+```
+* compare all the interactions sending from fibroblast to inflamatory immune cells
+```R
+par(mfrow = c(1, 2), xpd=TRUE)
+for (i in 1:length(object.list)) {
+ netVisual_chord_gene(object.list[[i]], sources.use = c(1,2, 3, 4), targets.use = c(8,10),  title.name = paste0("Signaling received by Inflam.DC and .TC - ", names(object.list)[i]), legend.pos.x = 10)
 }
 ```
 ### Part Ⅵ：比较不同数据集之间地信号基因表达分布
