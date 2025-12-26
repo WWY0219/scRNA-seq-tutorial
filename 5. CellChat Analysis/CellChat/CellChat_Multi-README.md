@@ -3,7 +3,7 @@ Cellchat能够从scRNA-seq数据中定量推断和分析细胞间通讯网络，
 ## DESCRIPTION
 ### Version
 CellChat V2
-### Github Learning
+### Learning
 * Github :<https://github.com/jinworks/CellChat>
 * ZhiHu-1:<https://zhuanlan.zhihu.com/p/1894789522887250489>
 * Zhihu-2:<https://zhuanlan.zhihu.com/p/717734779>
