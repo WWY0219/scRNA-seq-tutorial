@@ -37,7 +37,7 @@ library(SCP)
 set.seed(1234)
 # 查看工作路径下的文件
 list.files()
-dir.create("./CellChat/
+dir.create("./CellChat/)
 ```
 
 ### 02. 加载每个数据集的cellChat对象，然后合并在一起
@@ -209,10 +209,9 @@ cellchat <- netClustering(cellchat, type = "functional")
 ```R
 netVisual_embeddingPairwise(cellchat, type = "functional", label.size = 3.5)
 ```
-#> 2D visualization of signaling networks from datasets 1 2
-```
+* 2D visualization of signaling networks from datasets 1 2
 ```R
-# netVisual_embeddingZoomIn(cellchat, type = "functional", nCol = 2)
+netVisual_embeddingZoomIn(cellchat, type = "functional", nCol = 2)
 ```
 #### 根据结构相似性识别信号组
 ```R
