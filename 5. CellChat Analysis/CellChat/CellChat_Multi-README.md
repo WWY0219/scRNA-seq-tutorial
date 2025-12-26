@@ -214,26 +214,31 @@ netVisual_embeddingPairwise(cellchat, type = "functional", label.size = 3.5)
 netVisual_embeddingZoomIn(cellchat, type = "functional", nCol = 2)
 ```
 #### 根据结构相似性识别信号组
+* Compute signaling network similarity for datasets 1 2
 ```R
 cellchat <- computeNetSimilarityPairwise(cellchat, type = "structural")
-#> Compute signaling network similarity for datasets 1 2
-cellchat <- netEmbedding(cellchat, type = "structural")
-#> Manifold learning of the signaling networks for datasets 1 2
-cellchat <- netClustering(cellchat, type = "structural")
-#> Classification learning of the signaling networks for datasets 1 2
-# Visualization in 2D-space
-netVisual_embeddingPairwise(cellchat, type = "structural", label.size = 3.5)
-#> 2D visualization of signaling networks from datasets 1 2
 ```
+* Manifold learning of the signaling networks for datasets 1 2
+```R
+cellchat <- netEmbedding(cellchat, type = "structural")
+```
+* Classification learning of the signaling networks for datasets 1 2
+```R
+cellchat <- netClustering(cellchat, type = "structural")
+```
+* Visualization in 2D-space
+* ```R
+netVisual_embeddingPairwise(cellchat, type = "structural", label.size = 3.5)
+```
+* 2D visualization of signaling networks from datasets 1 2
 ```R
 netVisual_embeddingPairwiseZoomIn(cellchat, type = "structural", nCol = 2)
-#> 2D visualization of signaling networks from datasets 1 2
 ```
 #### 计算并可视化学习的联合流形中的路径距离
 我们可以根据共享二维空间中的欧几里德距离来识别差异较大（或较小）的信令网络。较大的距离意味着两个数据集之间的通信网络在功能或结构相似性方面的差异较大。注意：我们只计算两个数据集之间重叠信号通路的距离。那些仅在一个数据集中识别的信号通路在此不予考虑。如果有超过三个数据集，可以通过comparison在函数中定义来进行成对比较rankSimilarity。
+* Compute the distance of signaling networks between datasets 1 2
 ```R
 rankSimilarity(cellchat, type = "functional")
-#> Compute the distance of signaling networks between datasets 1 2
 ```
 #### 识别和可视化保守和特定环境的信号通路
 通过比较每个信号通路的信息流/相互作用强度，我们可以识别信号通路，（i）关闭，（ii）减少，（iii）打开或（iv）增加，通过在一个条件下改变它们的信息流为与另一种情况相比。
