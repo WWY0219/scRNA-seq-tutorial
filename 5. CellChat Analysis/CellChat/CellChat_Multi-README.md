@@ -227,7 +227,7 @@ cellchat <- netEmbedding(cellchat, type = "structural")
 cellchat <- netClustering(cellchat, type = "structural")
 ```
 * Visualization in 2D-space
-* ```R
+```R
 netVisual_embeddingPairwise(cellchat, type = "structural", label.size = 3.5)
 ```
 * 2D visualization of signaling networks from datasets 1 2
