@@ -171,6 +171,7 @@ netVisual_diffInteraction(cellchat, weight.scale = T, measure = "weight.merged",
 ```
 #### 比较二维空间中的主要源和目标
 比较 2D 空间中的传出和传入交互强度可以很容易地识别在不同数据集之间发送或接收信号发生显着变化的细胞群
+* Signaling role analysis on the aggregated cell-cell communication network from all signaling pathways
 ```R
 num.link <- sapply(object.list, function(x) {rowSums(x@net$count) + colSums(x@net$count)-diag(x@net$count)})
 weight.MinMax <- c(min(num.link), max(num.link)) # control the dot size in the different datasets
@@ -178,20 +179,12 @@ gg <- list()
 for (i in 1:length(object.list)) {
   gg[[i]] <- netAnalysis_signalingRole_scatter(object.list[[i]], title = names(object.list)[i], weight.MinMax = weight.MinMax)
 }
-#> Signaling role analysis on the aggregated cell-cell communication network from all signaling pathways
-#> Signaling role analysis on the aggregated cell-cell communication network from all signaling pathways
 patchwork::wrap_plots(plots = gg)
 ```
-从散点图中，我们可以看到与 NL 相比，Inflam.DC 和 cDC1 成为 LS 中的主要来源和目标之一。成纤维细胞群也成为 LS 中发出信号的主要来源。 此外，我们可以识别 NL 和 LS 之间 Inflam.DC 和 cDC1 的特定信号变化。## 识别与一个细胞组相关的信号变化。
+* Visualizing differential outgoing and incoming signaling changes from Con to Test
 ```R
 gg1 <- netAnalysis_signalingChanges_scatter(cellchat, idents.use = "Inflam. DC", signaling.exclude = "MIF")
-#> Visualizing differential outgoing and incoming signaling changes from NL to LS
-#> The following `from` values were not present in `x`: 0
-#> The following `from` values were not present in `x`: 0, -1
 gg2 <- netAnalysis_signalingChanges_scatter(cellchat, idents.use = "cDC1", signaling.exclude = c("MIF"))
-#> Visualizing differential outgoing and incoming signaling changes from NL to LS
-#> The following `from` values were not present in `x`: 0, 2
-#> The following `from` values were not present in `x`: 0, -1
 patchwork::wrap_plots(plots = list(gg1,gg2))
 ```
 ### Part Ⅱ：识别保守和特定环境的信号通路
