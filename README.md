@@ -3,7 +3,8 @@
 ## Environment
 R 4.3.2<br>
 Seurat V5
-> Conda::R432
+> Conda::R432(主要通过这个环境来分析）
+> Conda::seurat（R4.5.1)
 ## scRNA-Tutorial
 ### 0. Cellranger
 ### 1. Quality Control
