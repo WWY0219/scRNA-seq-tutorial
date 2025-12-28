@@ -5,7 +5,7 @@ WGCNA(Weighted Gene Co-expression Network Analysis)即加权基因共表达网�
 hdWGCNA 
 ### Learning
 * Github :
-* ZhiHu-1:
+* Document:<https://smorabit.github.io/hdWGCNA/>
 * Zhihu-2:
 ## Usage
 ### 01. 加载包并准备环境
