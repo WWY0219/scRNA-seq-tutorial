@@ -1,2 +1,0 @@
-library(scTenifoldKnk)
-library(Seurat)
