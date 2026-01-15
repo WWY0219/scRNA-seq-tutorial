@@ -5,6 +5,8 @@ rm(list=ls());gc()
 setwd("workspace")
 getwd()
 library(qs)
+library(tibble)
+library(DESeq2)
 library(dplyr)
 library(Seurat)
 library(ggpubr)
@@ -20,12 +22,11 @@ library(pheatmap)
 library(ggrepel)
 set.seed(1234)
 list.files()
-dir.create("./04.Peseudobluk/")
+dir.create("./06.Peseudobulk/")
 
 
 # ============================================ Load Data ===================================================
 seurat_obj <- qread("seurat_obj.qs")
-
 
 # ============================================ 首先观察各个细胞亚群的相关性（验证性工作） ===================================================
 av <-AggregateExpression(seurat_obj,
@@ -37,7 +38,7 @@ av <-AggregateExpression(seurat_obj,
 ## colnames为orig.ident_celltype, rownames为gene symbol
 av=as.data.frame(av[[1]])
 head(av)[1:3,1:3] 
-write.csv(av,file = 'AverageExpression_seurat_obj.csv')
+write.csv(av,file = './06.Peseudobulk/AverageExpression_seurat_obj.csv')
 
 ## 找到sd最显著的排名前1000基因
 cg <- names(tail(sort(apply(log(av+1), 
@@ -53,7 +54,13 @@ rownames(ac)=colnames(df)
 colnames(ac)[1:2] <- c("orig.ident","celltype")
 
 ## seurat_obj 进行分组
-ac$group = ifelse(grepl('GSM4942397|GSM4942396|GSM4942398|GSM4942399|GSM5023319',ac$orig.ident),"control","tumor")
+group1_ids <- 'GSM4942397|GSM4942396'
+group2_ids <- 'GSM4942398|GSM4942399'
+group3_ids <- 'GSM5023319'
+ac$group <- ifelse(grepl(group1_ids, ac$orig.ident), "group1",
+            ifelse(grepl(group2_ids, ac$orig.ident), "group2",
+            ifelse(grepl(group3_ids, ac$orig.ident), "group3", "Unknown")))
+
 table(ac$group)
 head(ac)
 ## -------------------------------------------------visulazition---------------------------------------------------------
@@ -140,18 +147,28 @@ av <-AggregateExpression(seurat_obj,
 av=as.data.frame(av[[1]])
 head(av)[1:3,1:3]       # 可以看到是整数矩阵
 
-## ----------------------------------------------- DESeq2 ---------------------------------------------------
-library(tibble)
-library(DESeq2)
+## ----------------------------------------------------------- DESeq2 ------------------------------------------------------------------
 ### Get counts matrix
 counts_res <- av
 head(counts_res)
 
 ### generate sample level metadata
 colData <- data.frame(samples = colnames(counts_res))
+#### Methods-1
 colData <- colData %>%
   mutate(condition = ifelse(grepl('Normal', samples), 'Normal', 'Tumor')) %>%
   column_to_rownames(var = 'samples')
+#### Methods-2
+colData <- colData %>%
+  mutate(condition = case_when(
+    grepl('GSM4942397|GSM4942396', samples) ~ 'Y', # 修改为你的Y组特征
+    grepl('GSM4942398|GSM4942399', samples) ~ 'M', # 修改为你的M组特征
+    grepl('GSM5023319', samples) ~ 'O',            # 修改为你的O组特征
+    TRUE ~ 'Unknown'
+  )) %>%
+  column_to_rownames(var = 'samples')
+colData$condition <- factor(colData$condition, levels = c("Y", "M", "O"))
+table(colData$condition)
 
 ### !!Create DESeq2 object!! 
 dds <- DESeqDataSetFromMatrix(countData = counts_res,
@@ -167,14 +184,20 @@ dds <- DESeq(dds)
 resultsNames(dds)                  # Check the coefficients for the comparison
 
 ### Generate results object
+#### Methods-1
 res <- results(dds, name = "condition_Normal_vs_Tumor")
 res
+#### Methods-2
+res_O_vs_Y <- results(dds, contrast = c("condition", "O", "Y"))
+res_O_vs_Y
+
 resOrdered <- res[order(res$padj),]
 head(resOrdered)
 DEG =as.data.frame(resOrdered)
 DEG_deseq2 = na.omit(DEG)
 
-#添加上下调信息
+## ----------------------------------------------------------- Visulization ------------------------------------------------------------------
+###添加上下调信息
 DEG_deseq2 <- DEG_deseq2 %>%
   mutate(Type = if_else(padj > 0.05, "stable",
                         if_else(abs(log2FoldChange) < 1, "stable",
@@ -188,7 +211,7 @@ top_genes <- DEG_deseq2 %>%
   slice_head(n = 5) %>% # 每个分组选Top10
   ungroup()
 
-
+###ggplot2
 ggplot(DEG_deseq2, aes(log2FoldChange,-log10(padj))) +
   geom_point(size = 3.5, alpha = 0.8,
              aes(color = Type),show.legend = T)  +
