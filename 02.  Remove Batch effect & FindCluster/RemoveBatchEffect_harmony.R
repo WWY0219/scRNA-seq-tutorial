@@ -16,10 +16,10 @@ library(harmony)
 library(RColorBrewer)
 library(clustree)
 set.seed(1234)
-
+dir.create("./02.harmony/", recursive = TRUE, showWarnings = FALSE)
 
 # ===============================================Load scData after QC-tutorial==============================================
-seurat_obj <- readRDS("../03.Output/seurat_obj_merge_qc.rds")
+seurat_obj <- readRDS("./01.QC/seurat_obj_merge_qc.rds")
 seurat_obj[["RNA"]]=JoinLayers(seurat_obj[["RNA"]])
 print(seurat_obj)
 table(seurat_obj@meta.data$orig.ident)
@@ -81,13 +81,13 @@ seurat_obj <- RunUMAP(seurat_obj, reduction = "harmony", dims = 1:30,
                                 reduction.name = "umap", verbose = FALSE)
 seurat_obj <- RunTSNE(seurat_obj, reduction = "harmony", dims = 1:30, 
                                 reduction.name = "tsne", verbose = FALSE)
-qsave(seurat_obj, "../03.Output/seurat_obj_harmony.qs")
+qsave(seurat_obj, "./02.harmony/seurat_obj_harmony.qs")
 
 table(seurat_obj@meta.data$seurat_clusters)
 ## clustree method
 p_clustree <- clustree(seurat_obj, prefix = "cluster_res") + coord_flip()
 p_clustree 
-ggsave("../03.Output/clustree.pdf",width =30 ,height =30,dpi =300)
+ggsave("./02.harmony/clustree.pdf",width =30 ,height =30,dpi =300)
 
 ## other methods (待补充）
 
@@ -98,7 +98,7 @@ Idents(seurat_obj) <- "cluster_res0.5"
 plot1=DimPlot(seurat_obj,reduction = "umap",group.by = "orig.ident",label = T)
 plot2=DimPlot(seurat_obj,reduction = "umap",group.by = "cluster_res0.5",label = T)+NoLegend()
 plot = plot1+plot2
-ggsave("../03.Output/USOO_umap.pdf",width = 20, height = 15,dpi =300)
+ggsave("./02.harmony/USOO_umap.pdf",width = 20, height = 15,dpi =300)
 
 
 
