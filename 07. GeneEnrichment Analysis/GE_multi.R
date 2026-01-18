@@ -69,7 +69,7 @@ p + theme(axis.text.x = element_text(
 ))
 
 
-# ============================================ 差异分析后的GO以及KEGG分析 ===================================================
+# ============================================ 组间差异分析后的GO以及KEGG分析 ===================================================
 exp_m <- GetAssayData(seurat_obj, layer = 'counts')
 gene.all <- rownames(exp_m)
 mt.gene  = grep('^MT-', gene.all, value = TRUE)                       # 线粒体基因
@@ -173,18 +173,14 @@ print(gsekp1)
 
 
 
-
-
-
-
-
-sce = sce[, Idents(sce) %in% c("FCGR3A+ Mono", "CD14+ Mono")] # 挑选细胞
-deg=FindMarkers(object = sce, 
-                ident.1 = 'FCGR3A+ Mono',
-                ident.2 = 'CD14+ Mono', 
-                test.use='MAST' )  ## MAST在单细胞领域较为常用
+# ============================================ 细胞间比较 ===================================================
+seurat_obj = subset(seurat_obj, subset = celltype %in% c("FCGR3A+ Mono", "CD14+ Mono")) 
+deg = FindMarkers(object = sce, 
+                  ident.1 = 'FCGR3A+ Mono',
+                  ident.2 = 'CD14+ Mono', 
+                  test.use= 'MAST' )          # MAST在单细胞领域较为常用
 head(deg)
-save(deg,file = 'deg-by-MAST-for-mono-2-cluster.Rdata')
+
 ##火山图
 degdf <- deg
 degdf$symbol <- rownames(deg)
