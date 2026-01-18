@@ -69,7 +69,70 @@ p + theme(axis.text.x = element_text(
 
 
 # ============================================ 差异分析后的GO以及KEGG分析 ===================================================
-sce=pbmc 
+exp_m <- GetAssayData(seurat_obj, layer = 'counts')
+gene.all <- rownames(exp_m)
+mt.gene  = grep('^MT-', gene.all, value = TRUE)                       # 线粒体基因
+ribosome.gene = grep('^RPL|^RPS|^MRPS|^MRPL', gene.all, value = TRUE) # 核糖体基因
+features = setdiff(gene.all, c(mt.gene, ribosome.gene))               # 去除不需要的基因
+unique(seurat_obj$group)
+
+## ---------------------------------------全部细胞的差异分析 ----------------------------------------
+Idents(seurat_obj) <- pbmc$group
+# 定义一个函数来处理每个细胞类型
+process_cell_type <- function(cell_type, seurat_obj) {
+  # 子集化为特定细胞类型
+  cell_subset <- subset(seurat_obj, subset = celltype == cell_type)
+  
+  # 查找差异表达基因
+  degs <- FindMarkers(cell_subset, 
+                      logfc.threshold = 0.25,
+                      min.pct = 0.1, 
+                      only.pos = FALSE, 
+                      features = features,
+                      ident.1 = "Resistant", 
+                      ident.2 = "Sensitive") %>%
+    mutate(gene = rownames(.))
+  
+  # 过滤符合条件的差异表达基因
+  degs_filtered <- degs %>%
+    filter(pct.1 > 0.1 & p_val_adj < 0.05) %>%
+    filter(abs(avg_log2FC) > 0.5)
+  
+  # 返回过滤后的结果，并标记是哪个细胞类型
+  return(list(cell_type = cell_type, degs_filtered = degs_filtered))
+}
+
+# 获取所有独特的细胞类型
+cell_types <- unique(surat_obj$celltype)
+cell_types
+# 使用 lapply 对每个细胞类型进行处理
+results <- lapply(cell_types, 
+                  function(cell_type) process_cell_type(cell_type, seurat_obj))
+# 组合所有细胞类型的差异表达基因数据
+combined_results <- do.call(rbind, lapply(results, function(x) {
+  x$degs_filtered %>% mutate(cell_type = x$cell_type)
+}))
+
+# 将最后一列改成cluster
+colnames(combined_results)[colnames(combined_results) == "cell_type"] <- "cluster"
+
+combined_results$cluster <- as.factor(combined_results$cluster)
+## 保存差异结果
+head(combined_results)
+table(combined_results$cluster)
+write.csv(combined_results,file = "./data/cd8差异结果.csv")
+combined_results <- read.csv(file = "./data/cd8差异结果.csv")
+jjVolcano(diffData = combined_results,
+          tile.col = corrplot::COL2('PuOr', 15)[4:12],
+          size  = 4,
+          fontface = 'italic',
+          base_size = 16,
+          legend.position = c(0.9, 0.9),
+          cluster.order = rev(unique(combined_results$cluster)))
+
+
+
+                  
 sce = sce[, Idents(sce) %in% c("FCGR3A+ Mono", "CD14+ Mono")] # 挑选细胞
 deg=FindMarkers(object = sce, 
                 ident.1 = 'FCGR3A+ Mono',
