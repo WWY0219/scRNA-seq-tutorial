@@ -21,6 +21,8 @@ library(SCOP)
 library(pheatmap)
 library(ggrepel)
 library(gplots)
+library(clusterProfiler)
+library(org.Hs.eg.db)
 set.seed(1234)
 list.files()
 dir.create("./07.GE/")
@@ -28,3 +30,186 @@ dir.create("./07.GE/")
 
 # ============================================ Load Data ===================================================
 seurat_obj <- qread("seurat_obj.qs")
+
+
+ids=bitr(sce.markers$gene,'SYMBOL','ENTREZID','org.Hs.eg.db') ## 将SYMBOL转成ENTREZID
+sce.markers=merge(sce.markers,ids,by.x='gene',by.y='SYMBOL')
+View(sce.markers)
+
+## 函数split()可以按照分组因子，把向量，矩阵和数据框进行适当的分组。
+## 它的返回值是一个列表，代表分组变量每个水平的观测。
+gcSample=split(sce.markers$ENTREZID, sce.markers$cluster) 
+
+
+## KEGG
+xx <- compareCluster(gcSample,
+  fun = "enrichKEGG",
+  organism = "hsa", pvalueCutoff = 0.05
+)
+p <- dotplot(xx)
+p + theme(axis.text.x = element_text(
+  angle = 45,
+  vjust = 0.5, hjust = 0.5
+))
+
+## GO
+xx <- compareCluster(gcSample,
+  fun = "enrichGO",
+  OrgDb = "org.Hs.eg.db",
+  ont = "BP",
+  pAdjustMethod = "BH",
+  pvalueCutoff = 0.01,
+  qvalueCutoff = 0.05
+)
+p <- dotplot(xx)
+p + theme(axis.text.x = element_text(
+  angle = 45,
+  vjust = 0.5, hjust = 0.5
+))
+
+
+# ============================================ 差异分析后的GO以及KEGG分析 ===================================================
+sce=pbmc 
+sce = sce[, Idents(sce) %in% c("FCGR3A+ Mono", "CD14+ Mono")] # 挑选细胞
+deg=FindMarkers(object = sce, 
+                ident.1 = 'FCGR3A+ Mono',
+                ident.2 = 'CD14+ Mono', 
+                test.use='MAST' )  ## MAST在单细胞领域较为常用
+head(deg)
+save(deg,file = 'deg-by-MAST-for-mono-2-cluster.Rdata')
+##火山图
+degdf <- deg
+degdf$symbol <- rownames(deg)
+logFC_t=0
+P.Value_t = 1e-28
+degdf$change = ifelse(degdf$p_val_adj < P.Value_t & degdf$avg_log2FC < 0,"down",
+                      ifelse(degdf$p_val_adj < P.Value_t & degdf$avg_log2FC > 0,"up","stable"))
+ggplot(degdf, aes(avg_log2FC,  -log10(p_val_adj))) +
+  geom_point(alpha=0.4, size=3.5, aes(color=change)) +
+  ylab("-log10(Pvalue)")+
+  scale_color_manual(values=c("blue", "grey","red"))+
+  geom_hline(yintercept = -log10(P.Value_t),lty=4,col="black",lwd=0.8) +
+  theme_bw()
+
+##功能注释
+## 获取上下调基因
+gene_up=rownames(deg[deg$avg_log2FC > 0,])
+gene_down=rownames(deg[deg$avg_log2FC < 0,])
+## 把SYMBOL改为ENTREZID
+library(org.Hs.eg.db)
+gene_up=as.character(na.omit(AnnotationDbi::select(org.Hs.eg.db,
+                                                   keys = gene_up,
+                                                   columns = 'ENTREZID',
+                                                   keytype = 'SYMBOL')[,2]))
+gene_down=as.character(na.omit(AnnotationDbi::select(org.Hs.eg.db,
+                                                     keys = gene_down,
+                                                     columns = 'ENTREZID',
+                                                     keytype = 'SYMBOL')[,2]))
+library(clusterProfiler)
+## 以上调基因为例，下调基因同理
+## KEGG
+gene_up <- unique(gene_up)
+kk.up <- enrichKEGG(gene = gene_up,
+                    organism = "hsa",
+                    pvalueCutoff = 0.9,
+                    qvalueCutoff = 0.9)
+dotplot(kk.up)
+
+## GO
+go.up <- enrichGO(gene = gene_up,
+                OrgDb = org.Hs.eg.db,
+                ont = "BP" ,
+                pAdjustMethod = "BH",
+                pvalueCutoff = 0.99,
+                qvalueCutoff = 0.99,
+                readabl = TRUE)
+dotplot(go.up)
+
+##差异分析后的GSEA
+## 上一步差异分析得到差异基因列表deg后取出，p值和log2FC
+nrDEG = deg[,c('avg_log2FC', 'p_val')]
+colnames(nrDEG)=c('log2FoldChange','pvalue') ##更改列名
+library(org.Hs.eg.db)
+library(clusterProfiler)
+## 把SYMBOL转换为ENTREZID，可能有部分丢失
+gene <- bitr(rownames(nrDEG),     
+             fromType = "SYMBOL",     
+             toType =  "ENTREZID",    
+             OrgDb = org.Hs.eg.db)
+## 基因名、ENTREZID、logFC一一对应起来
+gene$logFC <- nrDEG$log2FoldChange[match(gene$SYMBOL,rownames(nrDEG))]
+## 构建genelist
+geneList=gene$logFC
+names(geneList)=gene$ENTREZID 
+geneList=sort(geneList,decreasing = T) # 降序，按照logFC的值来排序
+## GSEA分析
+kk_gse <- gseKEGG(geneList     = geneList,
+                  organism     = 'hsa',
+                  nPerm        = 1000,
+                  minGSSize    = 10,
+                  pvalueCutoff = 0.9,
+                  verbose      = FALSE)
+kk_gse=DOSE::setReadable(kk_gse, OrgDb='org.Hs.eg.db',keyType='ENTREZID')
+sortkk<-kk_gse[order(kk_gse$enrichmentScore, decreasing = T),]
+library(enrichplot)
+gseaplot2(kk_gse, 
+          "hsa04510", 
+          color = "firebrick",
+          rel_heights=c(1, .2, .6))
+
+## 展示排名前四的通路
+gseaplot2(kk_gse, row.names(sortkk)[1:4])
+## 把p值标上去
+gseaplot2(kk_gse, 
+          "hsa04510", 
+          color = "firebrick",
+          rel_heights=c(1, .2, .6),
+          pvalue_table = TRUE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
