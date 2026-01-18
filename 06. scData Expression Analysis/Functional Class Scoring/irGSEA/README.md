@@ -1,12 +1,13 @@
 # Functional Class Scoring (FCS)
-Cellchat能够从scRNA-seq数据中定量推断和分析细胞间通讯网络，其预测细胞的主要信号的输入及输出，以及这些细胞和信号是如何通过网络分析和模式识别方法进行协调从而执行功能。Cellchat中配体-受体分析主要基于质量作用定律模型量化两个细胞群体之间的信号通讯概率，其中的质量作用定律模型是指形成复合物的速率（即信号强度）与配体和受体的浓度有关.<br>
+许多Functional Class Scoring (FCS)方法，如GSEA, GSVA,PLAGE, addModuleScore, SCSE, Vision, VAM, gficf, pagoda2和Sargent，都会受数据集组成的影响，数据集组成的轻微变化将改变细胞的基因集富集分数。
+假如将新的单细胞数据集整合到现有数据中，使用这些FCS方法需要重新计算每个细胞的基因集富集分数。这个步骤可能是繁琐且资源密集的。
+相反，基于单个细胞表达等级的FCS，如AUCell、UCell、singscore、ssGSEA、JASMINE和Viper，只需要计算新添加的单细胞数据集的富集分数，而无需重新计算所有细胞的基因集富集分数。原因是这些方法生成的富集分数仅依赖于单个细胞水平上的相对基因表达，与数据集组成无关。因此，这些方法可以节省大量的时间<br>
 ## DESCRIPTION
 ### Version
 CellChat V2
 ### Learning
 * Github :<https://github.com/jinworks/CellChat>
 * ZhiHu-1:<https://zhuanlan.zhihu.com/p/1894789522887250489>
-* Zhihu-2:<https://zhuanlan.zhihu.com/p/717734779>
 ### 17种常见的FCS方法
 * ***GSEA*** 检测排序基因列表顶部或底部的基因集富集程度，该列表是分组后计算排序基因信噪比或排序基因倍数变化得到的
 * ***GSVA*** 估计所有细胞之间每个基因的累积密度函数的核。 这个过程中需要考虑所有样本，容易受到样本背景信息的影响
