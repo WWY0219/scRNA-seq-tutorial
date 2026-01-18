@@ -128,46 +128,48 @@ jjVolcano(diffData = combined_results,
           legend.position = c(0.9, 0.9),
           cluster.order = rev(unique(combined_results$cluster)))
 
-
-## 富集分析需要挂上代理
+## -------------------------------KEGG----------------------------------
+### 富集分析需要挂上代理
 Sys.setenv("http_proxy"="http://10.16.46.126:7890")
 Sys.setenv("https_proxy"="http://10.16.46.126:7890") 
-## 读取差异分析之后的结果
-tex_cd8_degs_fil <- read.csv(file = "./data/tex_cd8_差异基因.csv")
-head(tex_cd8_degs_fil)
-ids_tex <- bitr(tex_cd8_degs_fil$gene, 'SYMBOL', 'ENTREZID', OrgDb = org.Hs.eg.db)
+### 读取差异分析之后的结果
+degs_fil <- read.csv(file = "./data/tex_cd8_差异基因.csv")
+head(degs_fil)
+ids_tex <- bitr(degs_fil$gene, 'SYMBOL', 'ENTREZID', OrgDb = org.Hs.eg.db)
 head(ids_tex)
-tex_cd8_degs_fil <- merge(tex_cd8_degs_fil, ids_tex, by.x = 'gene', by.y = 'SYMBOL')
-tex_cd8_kegg <- enrichKEGG(gene = tex_cd8_degs_fil$ENTREZID.x, organism = "hsa", pvalueCutoff = 1)
-write.csv(as.data.frame(tex_cd8_kegg@result), file = "./data/tex_cd8_kegg_result.csv", row.names = FALSE)
-dotplot(tex_cd8_kegg, showCategory = 10, title = "KEGG Enrichment for Tex_CD8")
+degs_fil <- merge(degs_fil, ids_tex, by.x = 'gene', by.y = 'SYMBOL')
+                 
+kegg <- enrichKEGG(gene = degs_fil$ENTREZID.x, 
+                   organism = "hsa", 
+                   pvalueCutoff = 1)
+write.csv(as.data.frame(kegg@result), file = "./data/tex_cd8_kegg_result.csv", row.names = FALSE)
+dotplot(kegg, showCategory = 10, title = "KEGG Enrichment")
 
-## GSEA
-tex_cd8_degs_fil <- tex_cd8_degs_fil[order(tex_cd8_degs_fil$avg_log2FC, decreasing = TRUE),]
-tex_markers_list <- setNames(as.numeric(tex_cd8_degs_fil$avg_log2FC), tex_cd8_degs_fil$ENTREZID.x)
-tex_cd8_gsea_go <- gseGO(geneList = tex_markers_list, OrgDb = org.Hs.eg.db, ont = "ALL", pvalueCutoff = 0.05)
-tex_cd8_gsea_go_arrange <- arrange(as.data.frame(tex_cd8_gsea_go@result), desc(abs(NES)))
-write.csv(tex_cd8_gsea_go_arrange, file = "./data/tex_cd8_gsea_go_results.csv", row.names = FALSE)
-# 定义配色
+## -------------------------------GSEA----------------------------------
+### data process
+degs_fil <- degs_fil[order(degs_fil$avg_log2FC, decreasing = TRUE),]
+markers_list <- setNames(as.numeric(degs_fil$avg_log2FC), degs_fil$ENTREZID.x)
+gsea_go <- gseGO(geneList = tex_markers_list, OrgDb = org.Hs.eg.db, ont = "ALL", pvalueCutoff = 0.05)
+gsea_go_arrange <- arrange(as.data.frame(gsea_go@result), desc(abs(NES)))
+write.csv(gsea_go_arrange, file = "./data/tex_cd8_gsea_go_results.csv", row.names = FALSE)
+### 定义配色
 color <- c("#f7ca64", "#43a5bf", "#86c697", "#a670d6", "#ef998a")
-# 绘制 tex_cd8 的 GSEA-GO 图
-## 上调
-# 提取上调通路
-upregulated_pathways <- tex_cd8_gsea_go@result %>%
+
+### 提取上调通路
+upregulated_pathways <- gsea_go@result %>%
   filter(NES > 0) %>%                       # 筛选上调通路
   arrange(desc(NES)) %>%                    # 按NES降序排列
   slice(1:5)                                # 选择前5条通路
-# 绘制前5条上调通路的GSEA曲线
-gsekp1_tex <- gseaplot2(
-  tex_cd8_gsea_go,                          # GSEA结果对象
+### 绘制前5条上调通路的GSEA曲线
+gsekp1 <- gseaplot2(
+  gsea_go,                                  # GSEA结果对象
   geneSetID = upregulated_pathways$ID,      # 上调通路的ID向量
   pvalue_table = F,                         # 是否显示p值表
   base_size = 12,                           # 字体大小
-  color = color # 可选颜色
+  color = color                             # 可选颜色
 )
 upregulated_pathways$Description
-# 显示图形
-gsekp1_tex
+print(gsekp1)
 
 
 
