@@ -7,6 +7,7 @@ getwd()
 library(qs)
 library(tibble)
 library(DESeq2)
+library(msigdbr) 
 library(dplyr)
 library(Seurat)
 library(ggpubr)
@@ -23,6 +24,7 @@ library(ggrepel)
 library(gplots)
 library(clusterProfiler)
 library(org.Hs.eg.db)
+library(singleseqgset)
 set.seed(1234)
 list.files()
 dir.create("./07.GE/")
@@ -31,17 +33,16 @@ dir.create("./07.GE/")
 # ============================================ Load Data ===================================================
 seurat_obj <- qread("seurat_obj.qs")
 
-
-ids=bitr(sce.markers$gene,'SYMBOL','ENTREZID','org.Hs.eg.db') ## 将SYMBOL转成ENTREZID
-sce.markers=merge(sce.markers,ids,by.x='gene',by.y='SYMBOL')
-View(sce.markers)
+# ============================================ Load Data ===================================================
+ids=bitr(seurat_obj.markers$gene,'SYMBOL','ENTREZID','org.Hs.eg.db') 
+seurat_obj.markers=merge(seurat_obj.markers,ids,by.x='gene',by.y='SYMBOL')
+View(seurat_obj.markers)
 
 ## 函数split()可以按照分组因子，把向量，矩阵和数据框进行适当的分组。
 ## 它的返回值是一个列表，代表分组变量每个水平的观测。
 gcSample=split(sce.markers$ENTREZID, sce.markers$cluster) 
 
-
-## KEGG
+## -------------------------------KEGG----------------------------------
 xx <- compareCluster(gcSample,
   fun = "enrichKEGG",
   organism = "hsa", pvalueCutoff = 0.05
@@ -77,37 +78,35 @@ features = setdiff(gene.all, c(mt.gene, ribosome.gene))               # 去除�
 unique(seurat_obj$group)
 
 ## ---------------------------------------全部细胞的差异分析 ----------------------------------------
-Idents(seurat_obj) <- pbmc$group
-# 定义一个函数来处理每个细胞类型
+Idents(seurat_obj) <- seurat_obj$group
+### 循环处理
 process_cell_type <- function(cell_type, seurat_obj) {
   # 子集化为特定细胞类型
   cell_subset <- subset(seurat_obj, subset = celltype == cell_type)
-  
   # 查找差异表达基因
   degs <- FindMarkers(cell_subset, 
                       logfc.threshold = 0.25,
                       min.pct = 0.1, 
                       only.pos = FALSE, 
                       features = features,
-                      ident.1 = "Resistant", 
-                      ident.2 = "Sensitive") %>%
+                      ident.1 = "group1", 
+                      ident.2 = "group2") %>%
     mutate(gene = rownames(.))
-  
   # 过滤符合条件的差异表达基因
   degs_filtered <- degs %>%
     filter(pct.1 > 0.1 & p_val_adj < 0.05) %>%
     filter(abs(avg_log2FC) > 0.5)
-  
   # 返回过滤后的结果，并标记是哪个细胞类型
   return(list(cell_type = cell_type, degs_filtered = degs_filtered))
 }
 
-# 获取所有独特的细胞类型
+### 获取所有独特的细胞类型
 cell_types <- unique(surat_obj$celltype)
 cell_types
-# 使用 lapply 对每个细胞类型进行处理
+### 使用 lapply 对每个细胞类型进行处理
 results <- lapply(cell_types, 
                   function(cell_type) process_cell_type(cell_type, seurat_obj))
+
 # 组合所有细胞类型的差异表达基因数据
 combined_results <- do.call(rbind, lapply(results, function(x) {
   x$degs_filtered %>% mutate(cell_type = x$cell_type)
@@ -115,13 +114,13 @@ combined_results <- do.call(rbind, lapply(results, function(x) {
 
 # 将最后一列改成cluster
 colnames(combined_results)[colnames(combined_results) == "cell_type"] <- "cluster"
-
 combined_results$cluster <- as.factor(combined_results$cluster)
 ## 保存差异结果
 head(combined_results)
 table(combined_results$cluster)
 write.csv(combined_results,file = "./data/cd8差异结果.csv")
 combined_results <- read.csv(file = "./data/cd8差异结果.csv")
+### 火山图
 jjVolcano(diffData = combined_results,
           tile.col = corrplot::COL2('PuOr', 15)[4:12],
           size  = 4,
@@ -131,8 +130,53 @@ jjVolcano(diffData = combined_results,
           cluster.order = rev(unique(combined_results$cluster)))
 
 
+## 富集分析需要挂上代理
+Sys.setenv("http_proxy"="http://10.16.46.126:7890")
+Sys.setenv("https_proxy"="http://10.16.46.126:7890") 
+## 读取差异分析之后的结果
+tex_cd8_degs_fil <- read.csv(file = "./data/tex_cd8_差异基因.csv")
+head(tex_cd8_degs_fil)
+ids_tex <- bitr(tex_cd8_degs_fil$gene, 'SYMBOL', 'ENTREZID', OrgDb = org.Hs.eg.db)
+head(ids_tex)
+tex_cd8_degs_fil <- merge(tex_cd8_degs_fil, ids_tex, by.x = 'gene', by.y = 'SYMBOL')
+tex_cd8_kegg <- enrichKEGG(gene = tex_cd8_degs_fil$ENTREZID.x, organism = "hsa", pvalueCutoff = 1)
+write.csv(as.data.frame(tex_cd8_kegg@result), file = "./data/tex_cd8_kegg_result.csv", row.names = FALSE)
+dotplot(tex_cd8_kegg, showCategory = 10, title = "KEGG Enrichment for Tex_CD8")
 
-                  
+## GSEA
+tex_cd8_degs_fil <- tex_cd8_degs_fil[order(tex_cd8_degs_fil$avg_log2FC, decreasing = TRUE),]
+tex_markers_list <- setNames(as.numeric(tex_cd8_degs_fil$avg_log2FC), tex_cd8_degs_fil$ENTREZID.x)
+tex_cd8_gsea_go <- gseGO(geneList = tex_markers_list, OrgDb = org.Hs.eg.db, ont = "ALL", pvalueCutoff = 0.05)
+tex_cd8_gsea_go_arrange <- arrange(as.data.frame(tex_cd8_gsea_go@result), desc(abs(NES)))
+write.csv(tex_cd8_gsea_go_arrange, file = "./data/tex_cd8_gsea_go_results.csv", row.names = FALSE)
+# 定义配色
+color <- c("#f7ca64", "#43a5bf", "#86c697", "#a670d6", "#ef998a")
+# 绘制 tex_cd8 的 GSEA-GO 图
+## 上调
+# 提取上调通路
+upregulated_pathways <- tex_cd8_gsea_go@result %>%
+  filter(NES > 0) %>%                       # 筛选上调通路
+  arrange(desc(NES)) %>%                    # 按NES降序排列
+  slice(1:5)                                # 选择前5条通路
+# 绘制前5条上调通路的GSEA曲线
+gsekp1_tex <- gseaplot2(
+  tex_cd8_gsea_go,                          # GSEA结果对象
+  geneSetID = upregulated_pathways$ID,      # 上调通路的ID向量
+  pvalue_table = F,                         # 是否显示p值表
+  base_size = 12,                           # 字体大小
+  color = color # 可选颜色
+)
+upregulated_pathways$Description
+# 显示图形
+gsekp1_tex
+
+
+
+
+
+
+
+
 sce = sce[, Idents(sce) %in% c("FCGR3A+ Mono", "CD14+ Mono")] # 挑选细胞
 deg=FindMarkers(object = sce, 
                 ident.1 = 'FCGR3A+ Mono',
