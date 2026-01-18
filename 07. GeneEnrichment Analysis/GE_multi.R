@@ -33,9 +33,9 @@ dir.create("./07.GE/")
 # ============================================ Load Data ===================================================
 seurat_obj <- qread("seurat_obj.qs")
 
-# ============================================ Load Data ===================================================
-ids=bitr(seurat_obj.markers$gene,'SYMBOL','ENTREZID','org.Hs.eg.db') 
-seurat_obj.markers=merge(seurat_obj.markers,ids,by.x='gene',by.y='SYMBOL')
+# ============================================ ALL Celltypes ===================================================
+ids = bitr(seurat_obj.markers$gene,'SYMBOL','ENTREZID','org.Hs.eg.db') 
+seurat_obj.markers = merge(seurat_obj.markers,ids,by.x='gene',by.y='SYMBOL')
 View(seurat_obj.markers)
 
 ## 函数split()可以按照分组因子，把向量，矩阵和数据框进行适当的分组。
@@ -43,18 +43,18 @@ View(seurat_obj.markers)
 gcSample=split(sce.markers$ENTREZID, sce.markers$cluster) 
 
 ## -------------------------------KEGG----------------------------------
-xx <- compareCluster(gcSample,
+kegg <- compareCluster(gcSample,
   fun = "enrichKEGG",
   organism = "hsa", pvalueCutoff = 0.05
 )
-p <- dotplot(xx)
+p <- dotplot(kegg)
 p + theme(axis.text.x = element_text(
   angle = 45,
   vjust = 0.5, hjust = 0.5
 ))
 
-## GO
-xx <- compareCluster(gcSample,
+## --------------------------------GO------------------------------------
+go <- compareCluster(gcSample,
   fun = "enrichGO",
   OrgDb = "org.Hs.eg.db",
   ont = "BP",
@@ -62,7 +62,7 @@ xx <- compareCluster(gcSample,
   pvalueCutoff = 0.01,
   qvalueCutoff = 0.05
 )
-p <- dotplot(xx)
+p <- dotplot(go)
 p + theme(axis.text.x = element_text(
   angle = 45,
   vjust = 0.5, hjust = 0.5
@@ -107,19 +107,18 @@ cell_types
 results <- lapply(cell_types, 
                   function(cell_type) process_cell_type(cell_type, seurat_obj))
 
-# 组合所有细胞类型的差异表达基因数据
+### 组合所有细胞类型的差异表达基因数据
 combined_results <- do.call(rbind, lapply(results, function(x) {
   x$degs_filtered %>% mutate(cell_type = x$cell_type)
 }))
-
-# 将最后一列改成cluster
+### 将最后一列改成cluster
 colnames(combined_results)[colnames(combined_results) == "cell_type"] <- "cluster"
 combined_results$cluster <- as.factor(combined_results$cluster)
 ## 保存差异结果
 head(combined_results)
 table(combined_results$cluster)
-write.csv(combined_results,file = "./data/cd8差异结果.csv")
-combined_results <- read.csv(file = "./data/cd8差异结果.csv")
+write.csv(combined_results,file = "./07.GE/combined_results.csv")
+combined_results <- read.csv(file = "./07.GE/combined_results.csv")
 ### 火山图
 jjVolcano(diffData = combined_results,
           tile.col = corrplot::COL2('PuOr', 15)[4:12],
