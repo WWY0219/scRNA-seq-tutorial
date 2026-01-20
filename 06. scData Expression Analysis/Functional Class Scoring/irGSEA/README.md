@@ -4,10 +4,11 @@
 相反，基于单个细胞表达等级的FCS，如AUCell、UCell、singscore、ssGSEA、JASMINE和Viper，只需要计算新添加的单细胞数据集的富集分数，而无需重新计算所有细胞的基因集富集分数。原因是这些方法生成的富集分数仅依赖于单个细胞水平上的相对基因表达，与数据集组成无关。因此，这些方法可以节省大量的时间<br>
 ## DESCRIPTION
 ### Version
-
+irGSEA 2.1.5
 ### Learning
-* Github :<https://github.com/jinworks/CellChat>
-* ZhiHu-1:<https://zhuanlan.zhihu.com/p/1894789522887250489>
+* Github :<https://github.com/chuiqin/irGSEA>
+* ZhiHu-1:<https://capablezzm.github.io/seurat/2025/03/26/Seurat%E5%8D%95%E7%BB%86%E8%83%9E%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B5/>
+* ZhiHu-2:<https://cloud.tencent.com/developer/article/2367848>
 ### 17种常见的FCS方法
 * ***GSEA*** 检测排序基因列表顶部或底部的基因集富集程度，该列表是分组后计算排序基因信噪比或排序基因倍数变化得到的
 * ***GSVA*** 估计所有细胞之间每个基因的累积密度函数的核。 这个过程中需要考虑所有样本，容易受到样本背景信息的影响
