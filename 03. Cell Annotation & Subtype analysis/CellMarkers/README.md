@@ -7,20 +7,33 @@
 ## Ovarian Aging
 ### Human
 ```R
-cell_markers <- list(MSC =c("CD34","PDGFRA"),                                 
-                     immunocell= c("PTPRC"),                                  
+cell_markers <- list(Oocytes =c("ZP3"),                                                                  
                      T_cell = c("CD3E", "CD3D", "CD4", "CD8A"),
-                     B_cell = c("MS4A1", "CD19", "CD79A"),
+                     B_cell = c("Ms4a1", "Cd19", "Cd79a"),
                      Monocyte = c("CD14", "CD68", "CSF1R", "FCGR3A", "LYZ","ITGAM"),
                      Dcs = c("CD1C", "CLEC9A", "HLA-DRA", "CD83"),
                      NK = c("NKG7", "GNLY", "KLRD1", "NCAM1"),                      
-                     Mastcell = c("CPA3", "TPSAB1", "KIT"),
-                     Fibroblast = c("COL1A1", "COL3A1", "THY1", "DCN", "FAP"),      
+                     TCs = c("Srd5a1"),
+                     GCs = c("Amh"),      
                      Endothelial = c("PECAM1", "VWF", "CDH5", "CLDN5", "FLT1"),     
                      SMC = c("ACTA2", "MYH11", "TAGLN"),                            
-                     SMC_cancercell =c("ACTG2","PRLR","SFRP4"),
-                     ESC =c("PLN","RGS5","SUSD2"),
-                     Proliferating_cell = c("MKI67", "PCNA", "TOP2A", "CCNB1"),
+                     luteal_cell =c("Ptgfr"),
+                     Epithelial = c("EPCAM", "KRT8", "KRT18", "CDH1")
+                    )
+```
+### Mice
+```R
+cell_markers <- list(Oocytes =c("Zp3"),                                                                  
+                     T_cell = c("CD3E", "CD3D", "CD4", "CD8A"),
+                     B_cell = c("Ms4a1", "Cd19", "Cd79a"),
+                     Monocyte = c("CD14", "CD68", "CSF1R", "FCGR3A", "LYZ","ITGAM"),
+                     Dcs = c("CD1C", "CLEC9A", "HLA-DRA", "CD83"),
+                     NK = c("NKG7", "GNLY", "KLRD1", "NCAM1"),                      
+                     TCs = c("Srd5a1"),
+                     GCs = c("Amh"),      
+                     Endothelial = c("PECAM1", "VWF", "CDH5", "CLDN5", "FLT1"),     
+                     SMC = c("ACTA2", "MYH11", "TAGLN"),                            
+                     luteal_cell =c("Ptgfr"),
                      Epithelial = c("EPCAM", "KRT8", "KRT18", "CDH1")
                     )
 ```
