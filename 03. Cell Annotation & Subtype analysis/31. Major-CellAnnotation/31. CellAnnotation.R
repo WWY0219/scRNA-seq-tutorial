@@ -1,5 +1,4 @@
 # =================================== Prepare Environment ===================================================
-## Global Settings
 Sys.setenv(LANGUAGE = "en")
 options(stringsAsFactors = FALSE)
 rm(list=ls());gc()
