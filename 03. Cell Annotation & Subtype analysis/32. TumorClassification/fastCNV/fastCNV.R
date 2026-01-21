@@ -42,4 +42,58 @@ common_theme <- theme(
   axis.text = element_text(size = 6)
 )
 FeaturePlot(seurat_obj, features = "cnv_fraction", reduction = "umap" ) & common_theme |
-  DimPlot(scColon1, reduction = "umap", group.by =  "celltype") & common_theme
+  DimPlot(seurat_obj, reduction = "umap", group.by =  "celltype") & common_theme
+
+## boxplot
+ggplot(FetchData(seurat_obj, vars = c("celltype", "cnv_fraction")), 
+       aes(celltype, cnv_fraction, fill = celltype)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, color = "black"))
+
+## 按染色体臂划分的CNV
+library(scales)
+FeaturePlot(seurat_obj, features = "20.p_CNV")  +
+  scale_color_distiller(palette = "RdBu", direction = -1, limits = c(-1, 1), 
+                       rescaler = function(x, to = c(0, 1), from = NULL) {
+                         rescale_mid(x, to = to, mid = 0)
+                       }) +
+  common_theme |
+FeaturePlot(seurat_obj, features = "X.q_CNV") +
+  scale_color_distiller(palette = "RdBu", direction = -1, limits = c(-1, 1), 
+                       rescaler = function(x, to = c(0, 1), from = NULL) {
+                         rescale_mid(x, to = to, mid = 0)
+                       }) +
+  common_theme
+
+
+# ====================================================== CNV classification =================================================== 
+seurat_obj <- CNVClassification(seurat_obj)
+ 
+DimPlot(seurat_obj, group.by = "20.p_CNV_classification") &
+  scale_color_manual(values = c(gain = "red", no_alteration = "grey", loss = "blue")) &
+  common_theme |
+DimPlot(seurat_obj, group.by = "X.q_CNV_classification") &
+  scale_color_manual(values = c(gain = "red", no_alteration = "grey", loss = "blue")) &
+  common_theme
+
+
+# ====================================================== CNV clusters =================================================== 
+DimPlot(seurat_obj, group.by = "cnv_clusters") + common_theme
+
+library(SeuratObject)
+ggplot(FetchData(seurat_obj, vars = c("cnv_clusters", "celltype")), aes(annot, fill = cnv_clusters)) +
+  geom_bar(position = "fill") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1, color = "black"))
+
+# ====================================================== CNV tree =================================================== 
+tree_data <- CNVTree(seurat_obj, 
+                     values = "calls", 
+                     cnv_thresh = 0.09, 
+                     healthyClusters = "1")
+
+
+
+
+
+
+
