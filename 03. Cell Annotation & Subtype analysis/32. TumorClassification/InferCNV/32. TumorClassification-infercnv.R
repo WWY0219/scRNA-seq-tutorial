@@ -30,9 +30,9 @@ Idents(seurat_obj) <- "clusters_res0.5"
 ###构建矩阵表达数据
 counts <- GetAssayData(seurat_obj, assay ="RNA", layer = 'counts')  
 ###细胞注释文件（分组信息）
-anno <_ data.frame(
-    celltype.group = seurat_obj$seurat_cluster,
-    row.names =rownames(USOO_pbject@meta.data)
+anno <- data.frame(
+    celltype.group = seurat_obj$seurat_clusters,
+    row.names =rownames(seurat_obj@meta.data)
     )
 head(anno)
 gene_order <- "../01.Data/Infercnv/genev37.txt"
