@@ -50,7 +50,7 @@ infercnv_obj = infercnv::run(infercnv_obj,
                              HMM = FALSE,
                              denoise = TRUE,                                 #决定是否对数据进行去噪处理
                              num_threads = 8,
-                             rite_expr_matrix = T                            #输出处理后的矩阵
+                             write_expr_matrix = T                            #输出处理后的矩阵
                              )
 
 save(infercnv_obj, file = "infercnv_obj.rdata")
