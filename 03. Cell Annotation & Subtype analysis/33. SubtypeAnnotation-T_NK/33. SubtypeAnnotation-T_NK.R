@@ -91,11 +91,11 @@ top20_marker_genes=markers%>% group_by(cluster)%>%top_n(n=20,wt = avg_log2FC)
 # ============================================================= MarkerGenes View =======================================================
 ## Marker
 known_markers = list(
-  "T cell"      = c("CD3D","CD3G","CD3E","CD4","CD8A","CD8B"),
-  "CD8/CD4 Tn"  = c("TCF7","SELL","LEF1","CCR7"),
-  "CD4 Teff"    = c("CX3CR1","PRF1","TBX21","S1PR5","KLRG1","GNLY","CTSW","NKG7","GZMH"),
-  "CD4 Tcm"     = c("ANXA1","LMNA","GPR183","MYADM"),
-  "CD4 Tem"     = c("LTB","IL7R","INTS6","FOS","JUN","GADD45B"),
+  "T cell"         = c("CD3D","CD3G","CD3E","CD4","CD8A","CD8B"),
+  "CD8/CD4 Tn"     = c("TCF7","SELL","LEF1","CCR7"),
+  "CD4 Teff"       = c("CX3CR1","PRF1","TBX21","S1PR5","KLRG1","GNLY","CTSW","NKG7","GZMH"),
+  "CD4 Tcm"        = c("ANXA1","LMNA","GPR183","MYADM"),
+  "CD4 Tem"        = c("LTB","IL7R","INTS6","FOS","JUN","GADD45B"),
   "CD4+ Tex-CXCL13" = c("CXCL13","PDCD1","TOX2","IL6ST","FKBP5","MAF","BCL6"),
   "CD8+ Tem"    = c("GZMK","CCL4L2","HLA-DQA1","CCL4","CCL5","CD69"),
   "CD8+ Tex-SPRY1" = c("SPRY1","NR4A3","ID2"),     # 去掉重复的 LMNA
