@@ -1,3 +1,42 @@
+#' Downsample Seurat Object by Group with Memory Optimization
+#'
+#' This function reduces the size of a Seurat object by randomly sampling cells from specified groups.
+#' It is optimized for speed using vectorized operations and manages memory efficiently by subsetting
+#' before running DietSeurat.
+#'
+#' @title Downsample Seurat Object by Group
+#' @description
+#' Performs stratified sampling on a Seurat object. The function can either:
+#' 1. Automatically calculate the number of cells per group based on a target total (`sp.total`).
+#' 2. Use a fixed number of cells per group (`sp.size`).
+#'
+#' It also includes an optional `DietSeurat` step to reduce the file size of the resulting object by removing unused assays and reductions.
+#'
+#' @param obj A Seurat object to be downsampled.
+#' @param group.by Character string. The column name in `meta.data` to group cells by (e.g., "seurat_clusters", "cell_type"). Default is "seurat_clusters".
+#' @param sp.size Integer or NULL. The specific number of cells to sample per group. If NULL (default), the sample size is calculated automatically as `ceiling(sp.total / n_groups)`.
+#' @param sp.total Integer. The approximate total number of cells desired in the final object. This parameter is ignored if `sp.size` is provided. Default is 1000.
+#' @param diet Logical. Whether to run `DietSeurat` on the subsetted object to remove unused assays, slots, and graphs. Default is TRUE.
+#' @param seed Integer or NULL. Random seed for reproducibility. Default is 1234. Set to NULL to disable seeding.
+#' @param keep.reductions Character vector. List of dimensional reductions to keep when `diet = TRUE`. Non-existent reductions will be ignored with a warning. Default is c('pca', 'umap', 'harmony').
+#'
+#' @return A subsetted (and optionally dieted) Seurat object containing the sampled cells.
+#' @author WWY
+#' @export
+#' @import Seurat
+#' @examples
+#' \dontrun{
+#' # Example 1: Auto-calculate sample size to get approximately 1000 cells total
+#' # If you have 10 clusters, it will sample 100 cells per cluster.
+#' small_obj <- sc_sample(seurat_obj, sp.total = 1000)
+#'
+#' # Example 2: Fixed size - Sample exactly 200 cells per cluster
+#' fixed_obj <- sc_sample(seurat_obj, group.by = "cell_type", sp.size = 200)
+#'
+#' # Example 3: Sample without removing other slots (keeping raw counts, etc.)
+#' full_slot_obj <- sc_sample(seurat_obj, diet = FALSE)
+#' }
+
 Sample_seob_opt <- function(obj, 
                             group.by = "seurat_clusters", 
                             sp.size = NULL, 
