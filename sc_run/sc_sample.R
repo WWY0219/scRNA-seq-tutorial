@@ -38,12 +38,12 @@
 #' }
 
 sc_sample <- function(obj, 
-                            group.by = "seurat_clusters", 
-                            sp.size = NULL, 
-                            sp.total = 1000, 
-                            diet = TRUE, 
-                            seed = 1234,
-                            keep.reductions = c('pca', 'umap', 'harmony')) {
+                      group.by = "seurat_clusters", 
+                      sp.size = NULL, 
+                      sp.total = 1000, 
+                      diet = TRUE, 
+                      seed = 1234,
+                      keep.reductions = c('pca', 'umap', 'harmony')) {
   
   # 1. 依赖与参数校验
   if (!inherits(obj, "Seurat")) stop("错误: obj 必须是 Seurat 对象")
