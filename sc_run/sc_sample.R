@@ -37,7 +37,7 @@
 #' full_slot_obj <- sc_sample(seurat_obj, diet = FALSE)
 #' }
 
-Sample_seob_opt <- function(obj, 
+sc_sample <- function(obj, 
                             group.by = "seurat_clusters", 
                             sp.size = NULL, 
                             sp.total = 1000, 
