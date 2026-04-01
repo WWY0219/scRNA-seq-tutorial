@@ -36,7 +36,8 @@
 
 sc_doublefinder <- function(seurat_obj= NULL,
                             max.dim = NULL, 
-                            max.pcs=NULL, 
+                            max.pcs=NULL,
+                            darate=8 * 1e-6 ,
                             pN = 0.25,
                             width = 8, 
                             height = 6,
@@ -97,7 +98,7 @@ sc_doublefinder <- function(seurat_obj= NULL,
     # Estimate homotypic doublet proportion
     homotypic.prop <- modelHomotypic(seurat_obj@meta.data$seurat_clusters)
     message("Homotypic doublet proportion: ", round(homotypic.prop, 3))
-    doublet.rate <- ncol(seurat_obj) * 8 * 1e-6           # Calculate doublet rate (8 per 1000 cells)
+    doublet.rate <- ncol(seurat_obj) * dbrate          # Calculate doublet rate (8 per 1000 cells)
     nExp_poi <- round(doublet.rate * nrow(seurat_obj@meta.data))
     nExp_poi.adj <- round(nExp_poi * (1 - homotypic.prop))
   
