@@ -1,21 +1,23 @@
-#' DoubleFinder-based Doublet Removal with Preprocessing (NormalizeData + RunPCA + UMAP/TSNE)
+#' DoubleFinder-based Doublet Removal with Preprocessing (NormalizeData + RunPCA + UMAP)
 #'
-#' This function performs data preprocessing (normalization, variable feature selection, scaling, PCA, UMAP/TSNE),
+#' This function performs data preprocessing (normalization, variable feature selection, scaling, PCA, UMAP),
 #' detects and removes doublets using DoubletFinder, records removed doublet cell IDs, and saves results.
 #'
 #' @title Doublet Removal with Preprocessing and Result Saving
 #' @description 
 #' Steps: 1. Create output directory; 2. Data preprocessing (NormalizeData -> FindVariableFeatures -> ScaleData -> PCA);
-#' 3. UMAP/TSNE dimensionality reduction; 4. Cell clustering (resolution=1); 5. Doublet detection with DoubletFinder;
+#' 3. UMAP/TSNE dimensionality reduction; 4. Cell clustering (resolution parameter applied); 5. Doublet detection with DoubletFinder;
 #' 6. Visualize doublet results; 7. Filter singlet cells and record removed doublet IDs; 8. Save and return clean Seurat object.
 #' @param seurat_obj Input Seurat object (required).
 #' @param max.dim Number of PCA dimensions used for UMAP/TSNE and clustering (required, e.g., 30).
 #' @param max.pcs Number of PCA dimensions used for DoubletFinder (required, e.g., 30).
-#' @param pN pN parameter for DoubletFinder (default: 0.25).
+#' @param res Clustering resolution for FindClusters (default: 1).
+#' @param dbrate Expected doublet rate per cell (default: 8 * 1e-6, approx. 0.8% per 1000 cells).
+#' @param pN pN parameter for DoubletFinder, defining the number of artificial doublets generated (default: 0.25).
 #' @param width Width of output plots in inches (default: 8).
 #' @param height Height of output plots in inches (default: 6).
 #' @param out_dir Path to main output directory (required). A subdirectory will be created automatically.
-#' @return A clean Seurat object containing only singlet cells.
+#' @return A clean Seurat object containing only singlet cells (Note: returns the subset of the original un-processed object).
 #' @author WWY
 #' @export
 #' @examples
@@ -28,6 +30,8 @@
 #'   seurat_obj = seu_qc,
 #'   max.dim = 30,
 #'   max.pcs = 30,
+#'   res = 1,
+#'   dbrate = 8 * 1e-6,
 #'   pN = 0.25,
 #'   out_dir = "../03.Output/"
 #' )
