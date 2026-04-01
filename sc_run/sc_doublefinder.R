@@ -37,6 +37,7 @@
 sc_doublefinder <- function(seurat_obj= NULL,
                             max.dim = NULL, 
                             max.pcs=NULL,
+                            res = 1,
                             dbrate=8 * 1e-6 ,
                             pN = 0.25,
                             width = 8, 
@@ -75,15 +76,14 @@ sc_doublefinder <- function(seurat_obj= NULL,
     seurat_obj <- ScaleData(seurat_obj)
     seurat_obj <- RunPCA(seurat_obj, features = VariableFeatures(object = seurat_obj))
 
-    ###-------------------------------- 3. UMAP & tSNE Dimensionality Reduction ------------------------------------------###
+    ###-------------------------------- 3. UMAP Dimensionality Reduction ------------------------------------------###
     message(paste("Running UMAP & tSNE based on PCA dimensions 1:", max.dim, "..."))
-    seurat_obj <- RunUMAP(seurat_obj, reduction = "pca", dims = 1:max.dim, reduction.name = "umap_naive", verbose = FALSE) 
-    seurat_obj <- RunTSNE(seurat_obj, reduction = "pca", dims = 1:max.dim, reduction.name = "tsne_naive", dim.embed = 2, verbose = FALSE) 
+    seurat_obj <- RunUMAP(seurat_obj, reduction = "pca", dims = 1:max.dim, reduction.name = "umap_naive", verbose = FALSE)  
   
     ###-------------------------------- 4. Cell Clustering --------------------------------------------------------------###
     message("Starting Cell Clustering (resolution=1)...")
     seurat_obj <- FindNeighbors(seurat_obj, dims = 1:max.dim)
-    seurat_obj <- FindClusters(seurat_obj, resolution = 1)
+    seurat_obj <- FindClusters(seurat_obj, resolution = res )
     message("Clustering is completed, obtained ", length(unique(seurat_obj$seurat_clusters)), " clusters")
     
     ###-------------------------------- 5. Doublet Detection with DoubletFinder ------------------------------------------###
