@@ -45,10 +45,11 @@ sc_doublefinder <- function(seurat_obj= NULL,
                             out_dir = NULL) {
     ## Load required libraries
     suppressMessages({
-        library(DoubletFinder)
-        library(Seurat)
-        library(ggplot2)
-        library(dplyr)
+      library(DoubletFinder)
+      library(Seurat)
+      library(ggplot2)
+      library(dplyr)
+      library(qs)
     })
     set.seed(1234)
 
