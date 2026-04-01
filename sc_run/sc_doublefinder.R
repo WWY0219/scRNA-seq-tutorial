@@ -208,9 +208,9 @@ sc_doublefinder <- function(seurat_obj= NULL,
     message("Doublet removal completed! Retained cells: ", ncol(seurat_singlet), ", Original cells: ", ncol(seurat_obj))
     
     ###-------------------------------- 8. Save Clean Seurat Object -------------------------------------------------------###
-    saveRDS(seurat_temp, 
-            file = file.path(output_dir, paste0(dir_name, "_clean.rds")))
-    message("Clean Seurat object saved to: ", file.path(output_dir, paste0(dir_name, "_clean.rds")))
+    qsave(seurat_temp, 
+          file = file.path(output_dir, paste0(dir_name, "_clean.qs")))
+    message("Clean Seurat object saved to: ", file.path(output_dir, paste0(dir_name, "_clean.qs")))
   
     ###-------------------------------- 9. Final Message -------------------------------------------------------------------###
     message("\n===== All processes completed! Results saved to: ", output_dir, " =====")
