@@ -119,7 +119,7 @@ sc_doublefinder <- function(seurat_obj= NULL,
                                pN = pN,          
                                pK = opt_pK,          
                                nExp = nExp_poi,    
-                               reuse.pANN = NULL,   
+                               reuse.pANN = pANN_col,   
                                sct = FALSE) 
     
     ###-------------------------------- 6. Visualization of DoubletFinder Results ----------------------------------------###
