@@ -112,6 +112,7 @@ sc_doublefinder <- function(seurat_obj= NULL,
                                nExp = nExp_poi.adj,    
                                reuse.pANN = NULL,   
                                sct = FALSE)
+  pANN_col <- paste0("pANN_", pN, "_", opt_pK, "_", nExp_poi.adj)
     ## Run DoubletFinder (Low confidence)
     message("Starting DoubletFinder - Low Confidence...")
     seurat_obj <- doubletFinder(seurat_obj, 
