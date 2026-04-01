@@ -37,7 +37,7 @@
 sc_doublefinder <- function(seurat_obj= NULL,
                             max.dim = NULL, 
                             max.pcs=NULL,
-                            darate=8 * 1e-6 ,
+                            dbrate=8 * 1e-6 ,
                             pN = 0.25,
                             width = 8, 
                             height = 6,
