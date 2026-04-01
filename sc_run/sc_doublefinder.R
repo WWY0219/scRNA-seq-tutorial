@@ -61,7 +61,7 @@ sc_doublefinder <- function(seurat_obj= NULL,
     
     ###-------------------------------- 0. Parameter Check (Avoid NULL Error) -------------------------------------------###
     if (is.null(seurat_obj)) stop("Error: 'seurat_obj' (input Seurat object) is required!")
-    if (is.null(max.dim)) stop("Error: 'max.dim' (PCA dimensions for UMAP/TSNE) is required!")
+    if (is.null(max.dim)) stop("Error: 'max.dim' (PCA dimensions for UMAP) is required!")
     if (is.null(max.pcs)) stop("Error: 'max.pcs' (PCA dimensions for DoubletFinder) is required!")
     if (is.null(out_dir)) stop("Error: 'out_dir' (output directory path) is required!")
     
