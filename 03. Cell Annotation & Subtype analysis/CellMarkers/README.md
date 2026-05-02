@@ -70,7 +70,7 @@ CD8_T_sub_markers <- list(CD8_Naive = c("CCR7","SELL","TCF7"),
                           CD8_T_Effector = c("IFNG"),
                           CD8_T_resident = c("CD69,"ITGAE","CXCR6"),
                           CD8_Tex   = c("PDCD1","LAG3","TIGIT","TOX"))
-                 
+```                 
 
 
 
