@@ -221,4 +221,3 @@ sc_harmony <- function(seurat_obj = NULL,
     message("=== Harmony processing completed! ===")
     return(seurat_obj)
 }
-}
