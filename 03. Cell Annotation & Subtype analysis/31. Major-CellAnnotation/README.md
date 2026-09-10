@@ -61,7 +61,7 @@ theme( panel.border = element_rect(color = "black", fill = NA),
        axis.line = element_blank()
      ) +
 labs(x = "", y = "")
-print(p1)
+print(p_cellmarkers)
 ggsave("../03.Output/Major-CellAnnotation/seurat_obj_cellmarkers.pdf", plot = p_cellmarkers, width = 20, height = 12, dpi = 300)
 ```
 ### Markers2
