@@ -36,17 +36,17 @@
 #'   out_dir = "../03.Output/"
 #' )
 #' }
-
-
-sc_doublefinder <- function(seurat_obj= NULL,
+sc_doublefinder <- function(seurat_obj = NULL,
                             max.dim = NULL, 
-                            max.pcs=NULL,
+                            max.pcs = NULL,
                             res = 1,
-                            dbrate=8 * 1e-6 ,
+                            dbrate = 8 * 1e-6,
                             pN = 0.25,
+                            methods = "SCT",
                             width = 8, 
                             height = 6,
                             out_dir = NULL) {
+
     ## Load required libraries
     suppressMessages({
       library(DoubletFinder)
