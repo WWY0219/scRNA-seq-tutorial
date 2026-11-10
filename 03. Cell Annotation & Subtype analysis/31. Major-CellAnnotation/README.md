@@ -135,3 +135,61 @@ plot4 | plot5
 
 qsave(seurat_obj, "../03.Output/Major-CellAnnotation/seurat_obj_beforeremovedblike.qs")
 ```
+
+
+## Ovarian cell annotation markers（PMID: 36671432）
+> Python
+-Human
+```
+ovary_markers = {
+    # 1. Germ cells
+    "Fetal_germ_cells": ["DDX4", "DAZL", "POU5F1", "PRDM1", "TFAP2C", "KIT", "NANOG", "SALL4", "LIN28A", "LEFTY1", "LEFTY2"],
+    "Mitotic_FGCs": ["POU5F1", "NANOG"],
+    "RA_responsive_FGCs": ["STRA8", "ZGLP1", "ANHX", "ASB9", "THRA"],
+    "Meiotic_prophase_FGCs": ["IL13RA2"],
+    "Oogenesis_stage_FGCs": ["PECAM1", "ZP3", "OOSP2"],
+    "Oocyte": ["GDF9", "DDX4", "DAZL", "ZP2", "ZP3", "FIGLA", "SYCP3", "SOX30", "ZAR1", "OOSP2", "LMOD3", "RBM46"],
+
+    # 2. Granulosa lineage
+    "Pregranulosa": ["FOXL2", "WNT4", "WNT6", "KITL"],
+    "Granulosa_cell": ["FOXL2", "WT1", "AMH", "AMHR2", "CYP11A1", "STAR", "INHBA", "CDH2", "GJA1", "TNNI3", "HSD17B1", "SERPINE2", "GSTA1", "KITL", "CYP19A1", "FSHR"],
+    "Cumulus_GCs": ["IGFBP2", "INHBB", "IHH", "VCAN", "FST", "HTRA1", "HAS2", "NPR2"],
+    "Mural_GCs": ["KRT18", "AKIRIN1", "CYP19A1", "CITED2", "FSHR", "BMPR2", "NPPC"],
+
+    # 3. Stromal cells
+    "Stromal_cell": ["DCN", "COL1A1", "COL1A2", "COL3A1", "COL6A1", "PDGFRA", "LUM", "APOE", "TCF21", "MFAP4", "NR2F2"],
+
+    # 4. Vascular cells
+    "Smooth_muscle_cell": ["TAGLN", "RGS5", "MYH11", "MCAM", "RERGL", "DES", "ACTA2"],
+    "Endothelial_cell": ["CDH5", "PECAM1", "VWF", "CD34", "CLDN5", "APLNR", "EGFL7"],
+
+    # 5. Immune cells
+    "Immune_cell": ["CD69", "ITGB2", "CD53", "CXCR4", "ELANE", "MPO", "TYROBP"],
+    "Innate_immune_cell": ["CD68", "IFI30"],
+    "NK_cell": ["CD3D", "KLRB1"],
+    "Macrophage": ["CD68", "CD14"],
+    "Antigen_presenting_cell": ["CD14", "HLA-DRA", "B2M", "HLA-DQB1"],
+    "T_cell": ["CD2", "CD3G", "CD8A"],
+    "B_cell": ["IGHM", "CD37"],
+    "Monocyte": ["CD14"]
+}
+-Mouse
+```
+mouse_ovary_markers = {
+    "Fetal_germ_cells": ["Ddx4", "Dazl", "Pou5f1", "Prdm1", "Tfap2c", "Kit", "Nanog", "Sall4", "Lin28a", "Lefty1", "Lefty2"],
+    "Oocyte": ["Ddx4", "Dazl"],
+    "Pregranulosa": ["Foxl2", "Wnt4", "Wnt6", "Kitl"],
+    "Granulosa_cell": ["Amh", "Amhr2", "Kitl", "Cyp19a1", "Fshr"],
+    "Cumulus_GCs": ["Has2", "Npr2"],
+    "Mural_GCs": ["Fshr", "Bmpr2", "Nppc"],
+    "Stromal_cell": ["Mfap4", "Nr2f2", "Tcf21"],
+    "Endothelial_cell": ["Aplnr", "Egfl7"],
+    "Immune_cell": ["Elane", "Mpo", "Tyrobp"],
+    "T_cell": ["Aw112010", "Cd3g"],
+    "B_cell": ["Ighm", "Cd37"],
+    "Monocyte": ["Cd14"]
+}
+```
+
+
+
