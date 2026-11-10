@@ -137,11 +137,7 @@ qsave(seurat_obj, "../03.Output/Major-CellAnnotation/seurat_obj_beforeremovedbli
 ```
 
 
-## Ovarian cell annotation markers（PMID: 36671432
-        
-        
-        
-        ）
+## Ovarian cell annotation markers（PMID: 366714320)
 > Python
 -Human
 ```
